@@ -1,1 +1,977 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrintYuk Tanjungpinang - Portal Pemesanan & Admin System</title>
 
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- PDF.JS LIBRARY (Untuk Otomatis Hitung Jumlah Halaman PDF) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+  </script>
+
+  <!-- CHART.JS LIBRARY (Untuk Grafik Keuangan Admin Real Data) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+            },
+            accent: {
+              500: '#14b8a6',
+              600: '#0d9488',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased flex flex-col min-h-screen relative">
+
+  <!-- Header / Navbar -->
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <div class="p-2 bg-brand-500 text-white rounded-lg shadow-md">
+          <i data-lucide="printer" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <span class="text-xl font-bold text-slate-900 tracking-tight">PrintYuk!</span>
+          <span class="block text-xs text-brand-600 font-medium -mt-1">Tanjungpinang</span>
+        </div>
+      </div>
+      
+      <!-- NAV TABS BETWEEN CLIENT & ADMIN -->
+      <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <button id="tab-client-btn" onclick="switchTab('client')" class="px-4 py-2 rounded-lg font-bold text-xs md:text-sm bg-white text-brand-600 shadow-sm transition-all flex items-center gap-1.5">
+          <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+          <span>Portal Pemesanan</span>
+        </button>
+        <button id="tab-admin-btn" onclick="switchTab('admin')" class="px-4 py-2 rounded-lg font-bold text-xs md:text-sm text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+          <span>Dashboard Admin</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- TAB 1: PORTAL PEMESANAN PELANGGAN -->
+  <!-- ========================================== -->
+  <div id="client-view" class="space-y-0">
+    
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-b from-brand-50 to-slate-50 py-12 md:py-16 border-b border-slate-200">
+      <div class="max-w-6xl mx-auto px-4 text-center space-y-4">
+        <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-semibold bg-brand-100 text-brand-700">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Jasa Print Online #1 di Tanjungpinang
+        </span>
+        <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight">
+          Ngeprint Tugas & Berkas Tanpa <span class="text-brand-600">Perlu Antri!</span>
+        </h1>
+        <p class="max-w-2xl mx-auto text-slate-600 text-sm md:text-base">
+          Khusus Mahasiswa (UMRAH, STIE, Poltekkes) & Pekerja Kantoran Tanjungpinang. Upload file, pilih metode pembayaran (Otomatis/COD), lalu berkas diproses & diantar!
+        </p>
+      </div>
+    </section>
+
+    <!-- Main Content: Form & Kalkulator -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-12 gap-8" id="order-form">
+      
+      <!-- Form & Kalkulator (Kiri) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
+          
+          <!-- Step 1: Upload File -->
+          <div>
+            <label class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-3">
+              <span class="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs">1</span>
+              Upload File / Dokumen
+            </label>
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition-colors bg-slate-50 relative" id="drop-zone">
+              
+              <div class="flex flex-col items-center gap-2 cursor-pointer relative" id="upload-placeholder">
+                <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.png">
+                <i data-lucide="upload-cloud" class="w-10 h-10 text-brand-500"></i>
+                <p class="font-semibold text-slate-700 text-sm">Klik atau drag & drop file ke sini</p>
+                <p class="text-xs text-slate-400">PDF, Word, PowerPoint, atau Gambar (Max 50MB)</p>
+              </div>
+
+              <div id="file-info" class="hidden flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 text-left relative z-20">
+                <div class="flex items-center gap-3 overflow-hidden">
+                  <i data-lucide="file-text" class="w-8 h-8 text-brand-500 shrink-0"></i>
+                  <div class="truncate">
+                    <p id="file-name" class="font-medium text-slate-800 text-sm truncate">file_nama.pdf</p>
+                    <p id="file-size" class="text-xs text-slate-400">0 MB</p>
+                  </div>
+                </div>
+                <button type="button" id="remove-file" class="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 transition-colors z-30 cursor-pointer">
+                  <i data-lucide="x" class="w-5 h-5 pointer-events-none"></i>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Step 2: Identitas Pemesan -->
+          <div>
+            <label class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-3">
+              <span class="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs">2</span>
+              Data Pemesan
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Nama Pemesan</label>
+                <input type="text" id="cust-name" placeholder="Contoh: Budi Santoso" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Nomor WhatsApp</label>
+                <input type="tel" id="cust-phone" placeholder="081234567890" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Spesifikasi Print -->
+          <div>
+            <label class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-3">
+              <span class="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs">3</span>
+              Spesifikasi Cetak
+            </label>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Jenis Kertas</label>
+                <select id="paper-type" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                  <option value="500">HVS A4 75gr (Rp 500/lembar)</option>
+                  <option value="600">HVS F4/Maks 75gr (Rp 600/lembar)</option>
+                  <option value="800">HVS A4 80gr (Rp 800/lembar)</option>
+                  <option value="2500">Art Paper 150gr (Rp 2.500/lembar)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Mode Warna</label>
+                <select id="print-color" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                  <option value="0">Hitam Putih (B/W)</option>
+                  <option value="500">Warna Sedikit / Teks (+Rp 500)</option>
+                  <option value="1500">Warna Full / Gambar (+Rp 1.500)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Sisi Cetak</label>
+                <select id="print-sides" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                  <option value="1">1 Sisi (Simplex)</option>
+                  <option value="2">2 Sisi (Duplex / Bolak-balik)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Opsi Jilid</label>
+                <select id="binding-type" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                  <option value="0">Tanpa Jilid</option>
+                  <option value="5000">Jilid Lakban + Mika (Rp 5.000)</option>
+                  <option value="10000">Jilid Spiral Plastik (Rp 10.000)</option>
+                  <option value="25000">Jilid Skripsi / Hardcover (Rp 25.000)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Jumlah Halaman Document</label>
+                <input type="number" id="page-count" value="1" min="1" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Jumlah Rangkap (Copy)</label>
+                <input type="number" id="copy-count" value="1" min="1" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Pengiriman & Metode Pembayaran -->
+          <div>
+            <label class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-3">
+              <span class="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs">4</span>
+              Pengiriman & Metode Pembayaran
+            </label>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Opsi Pengambilan / Kurir</label>
+                <select id="delivery-option" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                  <option value="0">Ambil Sendiri di Toko (Gratis)</option>
+                  <option value="3000">COD Kampus UMRAH (Rp 3.000)</option>
+                  <option value="3000">COD Kampus STIE / Poltekkes (Rp 3.000)</option>
+                  <option value="5000">Kurir Instant Area Km. 1 - Km. 8 (Rp 5.000)</option>
+                  <option value="8000">Kurir Instant Area Km. 9 - Km. 15 (Rp 8.000)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Pilih Metode Pembayaran</label>
+                <select id="payment-method" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold text-slate-800">
+                  <optgroup label="── Pembayaran Digital (Otomatis Lunas) ──">
+                    <option value="QRIS Auto">QRIS Instan (GoPay, ShopeePay, OVO, Dana, LinkAja, m-Banking)</option>
+                    <option value="Transfer BCA Auto">Virtual Account BCA (Verifikasi Otomatis)</option>
+                    <option value="Transfer Mandiri Auto">Virtual Account Mandiri (Verifikasi Otomatis)</option>
+                  </optgroup>
+                  <optgroup label="── Bayar Manual di Tempat (COD / Cash) ──">
+                    <option value="COD Kampus">COD (Bayar Tunai / Cash saat Kurir Tiba di Kampus/Kos)</option>
+                    <option value="Bayar di Toko">Bayar Tunai di Toko (Saat Ambil Berkas)</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Catatan Tambahan (Opsional)</label>
+                <textarea id="notes" placeholder="Contoh: Print halaman 1-10 saja, atau Mika warna biru..." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none h-20 resize-none"></textarea>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Rincian Biaya & Order (Kanan) -->
+      <div class="lg:col-span-5 space-y-6">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 sticky top-24">
+          <h2 class="text-lg font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between">
+            <span>Rincian Total Biaya</span>
+            <i data-lucide="calculator" class="w-5 h-5 text-brand-500"></i>
+          </h2>
+
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between text-slate-600">
+              <span>Biaya Cetak per Lembar:</span>
+              <span id="price-per-sheet" class="font-semibold text-slate-800">Rp 500</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>Total Lembar Kertas:</span>
+              <span id="total-sheets" class="font-semibold text-slate-800">1 Lembar</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>Subtotal Cetak:</span>
+              <span id="subtotal-print" class="font-semibold text-slate-800">Rp 500</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>Biaya Jilid:</span>
+              <span id="binding-cost" class="font-semibold text-slate-800">Rp 0</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>Ongkos Kirim:</span>
+              <span id="delivery-cost" class="font-semibold text-slate-800">Rp 0</span>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex justify-between items-end">
+              <div>
+                <span class="text-xs text-slate-400 block font-medium">TOTAL HARUS DIBAYAR</span>
+                <span id="grand-total" class="text-2xl font-extrabold text-brand-600">Rp 500</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" id="btn-whatsapp" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+            <i data-lucide="send" class="w-5 h-5"></i>
+            <span>Kirim Pesanan & Bayar</span>
+          </button>
+
+          <p class="text-xs text-center text-amber-600 font-medium mt-3 bg-amber-50 p-2 rounded-lg border border-amber-200">
+            💡 <strong>Catatan:</strong> Pembayaran Digital akan terverifikasi <strong>LUNAS Otomatis</strong>. Untuk opsi <strong>COD/Tunai</strong>, Admin akan mengonfirmasi pelunasan saat uang diterima.
+          </p>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- TAB 2: DASHBOARD ADMIN & PEMBUKUAN -->
+  <!-- ========================================== -->
+  <div id="admin-view" class="hidden max-w-6xl w-full mx-auto px-4 py-8 space-y-6">
+    
+    <!-- PIN GATE AUTH -->
+    <div id="admin-pin-gate" class="max-w-md mx-auto my-12 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-center space-y-4">
+      <div class="w-16 h-16 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto">
+        <i data-lucide="shield-check" class="w-8 h-8"></i>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-900">Akses Masuk Admin</h2>
+      <p class="text-xs text-slate-500">Masukkan PIN keamanan untuk kelola pesanan & pembukuan. (PIN Default: <span class="font-bold text-brand-600">1234</span>)</p>
+      <input type="password" id="admin-pin" placeholder="****" maxlength="8" class="w-full text-center text-2xl tracking-widest font-bold bg-slate-50 border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+      <button type="button" onclick="unlockAdmin()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md transition-all">
+        Masuk Dashboard Admin
+      </button>
+    </div>
+
+    <!-- MAIN ADMIN DASHBOARD CONTENT -->
+    <div id="admin-content" class="hidden space-y-6">
+      
+      <!-- HEADER METRICS & ACTIONS -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Dashboard Manajemen & Pembukuan</h2>
+          <p class="text-xs text-slate-500">Verifikasi pembayaran, kelola pesanan offline, dan pantau keuangan toko.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" onclick="openManualOrderModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm">
+            <i data-lucide="plus-square" class="w-4 h-4"></i> Input Transaksi Offline
+          </button>
+          <button type="button" onclick="openExpenseModal()" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all">
+            <i data-lucide="minus-circle" class="w-4 h-4"></i> Catat Pengeluaran
+          </button>
+          <button type="button" onclick="openSettingsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all">
+            <i data-lucide="key" class="w-4 h-4"></i> Pengaturan PIN
+          </button>
+        </div>
+      </div>
+
+      <!-- FILTER RENTANG WAKTU LOKAL (HARI, MINGGU, BULAN, TAHUN) -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="filter" class="w-4 h-4 text-brand-600"></i>
+          <span class="text-xs font-bold text-slate-700">Filter Periode Pembukuan & Grafik:</span>
+        </div>
+        <select id="time-filter" onchange="renderAdminDashboard()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          <option value="today">Hari Ini</option>
+          <option value="week">Minggu Ini (7 Hari Terakhir)</option>
+          <option value="month" selected>Bulan Ini</option>
+          <option value="year">Tahun Ini</option>
+          <option value="all">Semua Waktu</option>
+        </select>
+      </div>
+
+      <!-- METRIK KEUANGAN REAL DATA CARDS -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gradient-to-br from-brand-600 to-brand-700 text-white p-6 rounded-2xl shadow-sm space-y-1">
+          <p class="text-xs uppercase font-bold text-brand-100">Total Pemasukan (Lunas)</p>
+          <p id="stat-income" class="text-3xl font-extrabold">Rp 0</p>
+          <p id="stat-income-sub" class="text-xs text-brand-200">Berdasarkan periode filter</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-red-600 to-red-700 text-white p-6 rounded-2xl shadow-sm space-y-1">
+          <p class="text-xs uppercase font-bold text-red-100">Total Pengeluaran Real</p>
+          <p id="stat-expense" class="text-3xl font-extrabold">Rp 0</p>
+          <p id="stat-expense-sub" class="text-xs text-red-200">Catatan operasional toko</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-6 rounded-2xl shadow-sm space-y-1">
+          <p class="text-xs uppercase font-bold text-emerald-100">Laba Bersih Real (Profit)</p>
+          <p id="stat-profit" class="text-3xl font-extrabold">Rp 0</p>
+          <p class="text-xs text-emerald-200">Pemasukan minus Pengeluaran</p>
+        </div>
+      </div>
+
+      <!-- GRAFIK MURNI DARI DATA REAL -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-bold text-slate-800 text-base">Grafik Pembukuan Real</h3>
+          <span class="text-xs text-slate-400">Pemasukan vs Pengeluaran Periode Ini</span>
+        </div>
+        <div class="h-64">
+          <canvas id="financialChart"></canvas>
+        </div>
+      </div>
+
+      <!-- TABEL PESANAN MASUK & VERIFIKASI BAYAR -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i data-lucide="file-check" class="w-5 h-5 text-brand-600"></i>
+          Daftar Pesanan & Status Pembayaran
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-bold">
+              <tr>
+                <th class="p-3">ID / Waktu</th>
+                <th class="p-3">Pelanggan</th>
+                <th class="p-3">File</th>
+                <th class="p-3">Total & Metode</th>
+                <th class="p-3">Status Bayar</th>
+                <th class="p-3">Aksi Admin</th>
+              </tr>
+            </thead>
+            <tbody id="order-table-body" class="divide-y divide-slate-100">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TABEL PENGELUARAN -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i data-lucide="receipt" class="w-5 h-5 text-red-600"></i>
+          Catatan Pengeluaran Operasional
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-bold">
+              <tr>
+                <th class="p-3">Tanggal</th>
+                <th class="p-3">Kategori</th>
+                <th class="p-3">Deskripsi</th>
+                <th class="p-3">Nominal</th>
+              </tr>
+            </thead>
+            <tbody id="expense-table-body" class="divide-y divide-slate-100">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MODAL INPUT TRANSAKSI MANUAL / OFFLINE -->
+  <div id="manual-order-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <h3 class="font-bold text-lg text-slate-900">Input Transaksi Offline / Walk-in</h3>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">Nama Pelanggan</label>
+          <input type="text" id="manual-cust-name" placeholder="Pelanggan Toko" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">Keterangan Layanan</label>
+          <input type="text" id="manual-desc" placeholder="Contoh: Cetak HVS A4 50 Lembar + Jilid Lakban" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">Nominal Pemasukan (Rp)</label>
+          <input type="number" id="manual-amount" placeholder="30000" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">Metode Pembayaran</label>
+          <select id="manual-payment-method" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold">
+            <option value="Tunai (Cash)">Tunai (Cash)</option>
+            <option value="QRIS">QRIS / e-Wallet</option>
+            <option value="Transfer Bank">Transfer Bank</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeManualOrderModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs">Batal</button>
+        <button type="button" onclick="saveManualOrder()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs">Simpan Pemasukan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PENGATURAN GANTI PIN -->
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <h3 class="font-bold text-lg text-slate-900">Pengaturan PIN Admin</h3>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">PIN Sekarang</label>
+          <input type="password" id="old-pin" placeholder="****" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">PIN Baru</label>
+          <input type="password" id="new-pin" placeholder="****" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeSettingsModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs">Batal</button>
+        <button type="button" onclick="changeAdminPin()" class="w-1/2 bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl font-bold text-xs">Simpan PIN Baru</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CATAT PENGELUARAN -->
+  <div id="expense-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <h3 class="font-bold text-lg text-slate-900">Catat Pengeluaran Baru</h3>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">Kategori</label>
+          <select id="exp-category" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+            <option value="Bahan Baku">Bahan Baku (Kertas/Tinta/Jilid)</option>
+            <option value="Operasional">Operasional (Listrik/Internet)</option>
+            <option value="Lainnya">Lain-lain</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">Deskripsi Pengeluaran</label>
+          <input type="text" id="exp-desc" placeholder="Contoh: Beli Kertas HVS 70gr 5 Rim" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-600 mb-1">Nominal (Rp)</label>
+          <input type="number" id="exp-amount" placeholder="250000" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeExpenseModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs">Batal</button>
+        <button type="button" onclick="saveExpense()" class="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-bold text-xs">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 py-8 mt-auto text-center text-sm border-t border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 space-y-3">
+      <p class="font-semibold text-slate-200">PrintYuk! Tanjungpinang</p>
+      <p class="text-xs text-slate-500 max-w-md mx-auto">Solusi cetak dokumen online cepat & praktis untuk Mahasiswa dan Pekerja Kantoran di Tanjungpinang, Kepulauan Riau.</p>
+      <p class="text-xs text-slate-600 pt-3 border-t border-slate-800">&copy; 2026 PrintYuk Tanjungpinang. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIKA UTAMA -->
+  <script>
+    lucide.createIcons();
+
+    // TARGET NO WA ADMIN
+    const TARGET_PHONE = '6285658323189'; 
+
+    // STATE DATABASE LOCAL STORAGE
+    let orders = JSON.parse(localStorage.getItem('py_orders') || '[]');
+    let expenses = JSON.parse(localStorage.getItem('py_expenses') || '[]');
+    let adminPinStored = localStorage.getItem('py_admin_pin') || '1234';
+    let currentAttachedFile = null;
+    let myChart = null;
+
+    // ELEMENTS
+    const paperTypeEl = document.getElementById('paper-type');
+    const printColorEl = document.getElementById('print-color');
+    const printSidesEl = document.getElementById('print-sides');
+    const bindingTypeEl = document.getElementById('binding-type');
+    const pageCountEl = document.getElementById('page-count');
+    const copyCountEl = document.getElementById('copy-count');
+    const deliveryOptionEl = document.getElementById('delivery-option');
+    const paymentMethodEl = document.getElementById('payment-method');
+    const custNameEl = document.getElementById('cust-name');
+    const custPhoneEl = document.getElementById('cust-phone');
+    const notesEl = document.getElementById('notes');
+
+    const pricePerSheetEl = document.getElementById('price-per-sheet');
+    const totalSheetsEl = document.getElementById('total-sheets');
+    const subtotalPrintEl = document.getElementById('subtotal-print');
+    const bindingCostEl = document.getElementById('binding-cost');
+    const deliveryCostEl = document.getElementById('delivery-cost');
+    const grandTotalEl = document.getElementById('grand-total');
+
+    const fileInput = document.getElementById('file-input');
+    const uploadPlaceholder = document.getElementById('upload-placeholder');
+    const fileInfo = document.getElementById('file-info');
+    const fileNameEl = document.getElementById('file-name');
+    const fileSizeEl = document.getElementById('file-size');
+    const removeFileBtn = document.getElementById('remove-file');
+    const btnWhatsapp = document.getElementById('btn-whatsapp');
+
+    function formatRupiah(amount) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+    }
+
+    // SWITCH TAB PORTAL / ADMIN
+    function switchTab(type) {
+      const clientView = document.getElementById('client-view');
+      const adminView = document.getElementById('admin-view');
+      const clientBtn = document.getElementById('tab-client-btn');
+      const adminBtn = document.getElementById('tab-admin-btn');
+
+      if (type === 'client') {
+        clientView.classList.remove('hidden');
+        adminView.classList.add('hidden');
+        clientBtn.className = "px-4 py-2 rounded-lg font-bold text-xs md:text-sm bg-white text-brand-600 shadow-sm transition-all flex items-center gap-1.5";
+        adminBtn.className = "px-4 py-2 rounded-lg font-bold text-xs md:text-sm text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5";
+      } else {
+        clientView.classList.add('hidden');
+        adminView.classList.remove('hidden');
+        adminBtn.className = "px-4 py-2 rounded-lg font-bold text-xs md:text-sm bg-white text-brand-600 shadow-sm transition-all flex items-center gap-1.5";
+        clientBtn.className = "px-4 py-2 rounded-lg font-bold text-xs md:text-sm text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5";
+      }
+    }
+
+    // FUNGSI KALKULATOR
+    function calculateTotal() {
+      const basePaperPrice = parseInt(paperTypeEl.value) || 0;
+      const colorExtra = parseInt(printColorEl.value) || 0;
+      const sides = parseInt(printSidesEl.value) || 1;
+      const bindingCost = parseInt(bindingTypeEl.value) || 0;
+      const deliveryCost = parseInt(deliveryOptionEl.value) || 0;
+      const pageCount = Math.max(1, parseInt(pageCountEl.value) || 1);
+      const copyCount = Math.max(1, parseInt(copyCountEl.value) || 1);
+
+      let sheetsPerPage = (sides === 2) ? Math.ceil(pageCount / 2) : pageCount;
+      let totalSheets = sheetsPerPage * copyCount;
+      let pricePerSheet = basePaperPrice + colorExtra;
+
+      let subtotalPrint = pricePerSheet * totalSheets;
+      let totalBinding = bindingCost * copyCount;
+      let grandTotal = subtotalPrint + totalBinding + deliveryCost;
+
+      pricePerSheetEl.textContent = formatRupiah(pricePerSheet);
+      totalSheetsEl.textContent = totalSheets + " Lembar";
+      subtotalPrintEl.textContent = formatRupiah(subtotalPrint);
+      bindingCostEl.textContent = formatRupiah(totalBinding);
+      deliveryCostEl.textContent = formatRupiah(deliveryCost);
+      grandTotalEl.textContent = formatRupiah(grandTotal);
+
+      return { pricePerSheet, totalSheets, subtotalPrint, totalBinding, deliveryCost, grandTotal };
+    }
+
+    [paperTypeEl, printColorEl, printSidesEl, bindingTypeEl, pageCountEl, copyCountEl, deliveryOptionEl].forEach(el => {
+      el.addEventListener('change', calculateTotal);
+      el.addEventListener('input', calculateTotal);
+    });
+
+    // UPLOAD FILE & BACA DOKUMEN PDF
+    fileInput.addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(event) {
+        currentAttachedFile = {
+          name: file.name,
+          size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+          dataUri: event.target.result
+        };
+
+        fileNameEl.textContent = file.name;
+        fileSizeEl.textContent = currentAttachedFile.size;
+        uploadPlaceholder.classList.add('hidden');
+        fileInfo.classList.remove('hidden');
+
+        if (file.type === 'application/pdf') {
+          try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            pageCountEl.value = pdf.numPages;
+            calculateTotal();
+          } catch (err) {
+            console.error("Gagal hitung PDF:", err);
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    removeFileBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      fileInput.value = '';
+      currentAttachedFile = null;
+      uploadPlaceholder.classList.remove('hidden');
+      fileInfo.classList.add('hidden');
+      pageCountEl.value = 1;
+      calculateTotal();
+    });
+
+    // KIRIM PESANAN (DIGITAL AUTO LUNAS / COD BELUM LUNAS)
+    btnWhatsapp.addEventListener('click', function() {
+      const custName = custNameEl.value.trim();
+      const custPhone = custPhoneEl.value.trim();
+
+      if (!custName || !custPhone) {
+        alert("Mohon lengkapi Nama Pemesan dan Nomor WhatsApp!");
+        return;
+      }
+
+      const calc = calculateTotal();
+      const chosenPayment = paymentMethodEl.value;
+      const isAutoPayment = chosenPayment.includes('Auto');
+
+      const newOrder = {
+        id: 'PY-' + Math.floor(1000 + Math.random() * 9000),
+        date: new Date().toISOString(),
+        custName: custName,
+        custPhone: custPhone,
+        paperName: paperTypeEl.options[paperTypeEl.selectedIndex].text,
+        colorName: printColorEl.options[printColorEl.selectedIndex].text,
+        bindingName: bindingTypeEl.options[bindingTypeEl.selectedIndex].text,
+        deliveryName: deliveryOptionEl.options[deliveryOptionEl.selectedIndex].text,
+        paymentMethod: chosenPayment,
+        pages: pageCountEl.value,
+        copies: copyCountEl.value,
+        totalSheets: calc.totalSheets,
+        totalPrice: calc.grandTotal,
+        paymentStatus: isAutoPayment ? 'LUNAS' : 'Belum Lunas',
+        file: currentAttachedFile
+      };
+
+      orders.unshift(newOrder);
+      localStorage.setItem('py_orders', JSON.stringify(orders));
+
+      const fileName = currentAttachedFile ? currentAttachedFile.name : 'Tidak ada file';
+      const statusText = isAutoPayment ? '*SUDAH LUNAS (Digital Payment)*' : '*BELUM LUNAS (COD / Tunai)*';
+
+      const message = `*HALO ADMIN PRINTYUK! TANJUNGPINANG* 🖨️\n\n` +
+        `Saya mau pesan cetak dokumen:\n\n` +
+        `🆔 *ID Pesanan:* ${newOrder.id}\n` +
+        `👤 *Pemesan:* ${custName} (${custPhone})\n` +
+        `📄 *File:* ${fileName}\n` +
+        `📝 *Kertas:* ${newOrder.paperName}\n` +
+        `🎨 *Warna:* ${newOrder.colorName}\n` +
+        `📕 *Jilid:* ${newOrder.bindingName}\n` +
+        `📖 *Halaman & Copy:* ${newOrder.pages} Hal x ${newOrder.copies} Copy (${newOrder.totalSheets} lembar)\n` +
+        `🛵 *Pengiriman:* ${newOrder.deliveryName}\n` +
+        `💳 *Metode Bayar:* ${newOrder.paymentMethod}\n` +
+        `📌 *Status Pembayaran:* ${statusText}\n\n` +
+        `💰 *TOTAL BIAYA:* *${formatRupiah(calc.grandTotal)}*\n\n` +
+        `Mohon diproses ya admin, terima kasih!`;
+
+      window.open(`https://wa.me/${TARGET_PHONE}?text=${encodeURIComponent(message)}`, '_blank');
+    });
+
+    // UNLOCK ADMIN
+    function unlockAdmin() {
+      const pin = document.getElementById('admin-pin').value;
+      if (pin === adminPinStored) {
+        document.getElementById('admin-pin-gate').classList.add('hidden');
+        document.getElementById('admin-content').classList.remove('hidden');
+        renderAdminDashboard();
+      } else {
+        alert("PIN Admin Salah!");
+      }
+    }
+
+    // KONFIRMASI PEMBAYARAN MANUAL DI ADMIN (UNTUK COD/CASH)
+    function markAsPaid(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        order.paymentStatus = 'LUNAS';
+        localStorage.setItem('py_orders', JSON.stringify(orders));
+        renderAdminDashboard();
+        alert(`Pesanan ${orderId} berhasil dikonfirmasi LUNAS!`);
+      }
+    }
+
+    // HELPER FILTER WAKTU
+    function isDateInFilter(dateString, filterType) {
+      const itemDate = new Date(dateString);
+      const now = new Date();
+
+      if (filterType === 'today') {
+        return itemDate.toDateString() === now.toDateString();
+      } else if (filterType === 'week') {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        return itemDate >= sevenDaysAgo;
+      } else if (filterType === 'month') {
+        return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+      } else if (filterType === 'year') {
+        return itemDate.getFullYear() === now.getFullYear();
+      }
+      return true; // all
+    }
+
+    // RENDER DASHBOARD ADMIN
+    function renderAdminDashboard() {
+      const filterType = document.getElementById('time-filter').value;
+
+      // Filter Data Orders & Expenses
+      const filteredOrders = orders.filter(o => isDateInFilter(o.date, filterType));
+      const filteredExpenses = expenses.filter(e => isDateInFilter(e.date, filterType));
+
+      // Hitung Pemasukan hanya dari yang LUNAS di periode tersebut
+      const paidOrders = filteredOrders.filter(o => o.paymentStatus === 'LUNAS');
+      const totalIncome = paidOrders.reduce((sum, o) => sum + o.totalPrice, 0);
+      const totalExpense = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+      const profit = totalIncome - totalExpense;
+
+      document.getElementById('stat-income').textContent = formatRupiah(totalIncome);
+      document.getElementById('stat-expense').textContent = formatRupiah(totalExpense);
+      document.getElementById('stat-profit').textContent = formatRupiah(profit);
+
+      // Tabel Orders
+      const orderTbody = document.getElementById('order-table-body');
+      orderTbody.innerHTML = '';
+
+      if (orders.length === 0) {
+        orderTbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada pesanan masuk</td></tr>`;
+      } else {
+        orders.forEach(o => {
+          let downloadBtn = `<span class="text-slate-400">Tanpa File</span>`;
+          if (o.file && o.file.dataUri) {
+            downloadBtn = `<a href="${o.file.dataUri}" download="${o.file.name}" class="bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 px-2 py-1 rounded-lg font-bold inline-flex items-center gap-1">
+              <i data-lucide="download" class="w-3 h-3"></i> Download
+            </a>`;
+          }
+
+          let statusBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">Belum Lunas</span>`;
+          let actionBtn = `<button type="button" onclick="markAsPaid('${o.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg font-bold text-xs shadow-sm">
+            Konfirmasi Lunas (COD)
+          </button>`;
+
+          if (o.paymentStatus === 'LUNAS') {
+            statusBadge = `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">LUNAS</span>`;
+            actionBtn = `<span class="text-emerald-600 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Sedang Diproses</span>`;
+          }
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="p-3 font-bold text-slate-800">${o.id}<br><span class="text-[10px] text-slate-400 font-normal">${new Date(o.date).toLocaleDateString('id-ID')}</span></td>
+            <td class="p-3"><strong>${o.custName}</strong><br><span class="text-slate-400">${o.custPhone}</span></td>
+            <td class="p-3">${downloadBtn}</td>
+            <td class="p-3"><strong>${formatRupiah(o.totalPrice)}</strong><br><span class="text-slate-400">${o.paymentMethod}</span></td>
+            <td class="p-3">${statusBadge}</td>
+            <td class="p-3">${actionBtn}</td>
+          `;
+          orderTbody.appendChild(tr);
+        });
+      }
+
+      // Tabel Pengeluaran
+      const expTbody = document.getElementById('expense-table-body');
+      expTbody.innerHTML = '';
+      expenses.forEach(e => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3">${new Date(e.date).toLocaleDateString('id-ID')}</td>
+          <td class="p-3"><span class="bg-slate-100 px-2 py-0.5 rounded">${e.category}</span></td>
+          <td class="p-3">${e.desc}</td>
+          <td class="p-3 font-bold text-red-600">${formatRupiah(e.amount)}</td>
+        `;
+        expTbody.appendChild(tr);
+      });
+
+      renderRealChart(filterType);
+      lucide.createIcons();
+    }
+
+    // GRAFIK REAL BERDASARKAN FILTER WAKTU
+    function renderRealChart(filterType) {
+      const ctx = document.getElementById('financialChart').getContext('2d');
+      if (myChart) myChart.destroy();
+
+      const labels = [];
+      const incomeData = [];
+      const expenseData = [];
+
+      let daysCount = 7;
+      if (filterType === 'today') daysCount = 1;
+      else if (filterType === 'month') daysCount = 30;
+
+      for (let i = daysCount - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toLocaleDateString('id-ID');
+        labels.push(dateStr);
+
+        const dayIncome = orders
+          .filter(o => o.paymentStatus === 'LUNAS' && new Date(o.date).toLocaleDateString('id-ID') === dateStr)
+          .reduce((sum, o) => sum + o.totalPrice, 0);
+
+        const dayExpense = expenses
+          .filter(e => new Date(e.date).toLocaleDateString('id-ID') === dateStr)
+          .reduce((sum, e) => sum + e.amount, 0);
+
+        incomeData.push(dayIncome);
+        expenseData.push(dayExpense);
+      }
+
+      myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Pemasukan Lunas', data: incomeData, backgroundColor: '#0284c7' },
+            { label: 'Pengeluaran', data: expenseData, backgroundColor: '#dc2626' }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // MODAL INPUT TRANSAKSI OFFLINE / MANUAL
+    function openManualOrderModal() { document.getElementById('manual-order-modal').classList.remove('hidden'); }
+    function closeManualOrderModal() { document.getElementById('manual-order-modal').classList.add('hidden'); }
+
+    function saveManualOrder() {
+      const custName = document.getElementById('manual-cust-name').value.trim() || 'Pelanggan Toko';
+      const desc = document.getElementById('manual-desc').value.trim() || 'Transaksi Cetak Toko';
+      const amount = parseFloat(document.getElementById('manual-amount').value) || 0;
+      const paymentMethod = document.getElementById('manual-payment-method').value;
+
+      if (amount <= 0) {
+        alert("Mohon masukkan nominal pemasukan yang valid!");
+        return;
+      }
+
+      const manualOrder = {
+        id: 'OFF-' + Math.floor(1000 + Math.random() * 9000),
+        date: new Date().toISOString(),
+        custName: custName,
+        custPhone: 'Walk-in Toko',
+        paperName: desc,
+        colorName: 'Manual',
+        bindingName: '-',
+        deliveryName: 'Di Toko',
+        paymentMethod: paymentMethod,
+        pages: 1,
+        copies: 1,
+        totalSheets: 1,
+        totalPrice: amount,
+        paymentStatus: 'LUNAS',
+        file: null
+      };
+
+      orders.unshift(manualOrder);
+      localStorage.setItem('py_orders', JSON.stringify(orders));
+      closeManualOrderModal();
+      renderAdminDashboard();
+      alert("Pemasukan manual berhasil ditambahkan!");
+    }
+
+    // MODAL PENGATURAN GANTI PIN
+    function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); }
+    function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+
+    function changeAdminPin() {
+      const oldPin = document.getElementById('old-pin').value;
+      const newPin = document.getElementById('new-pin').value.trim();
+
+      if (oldPin !== adminPinStored) {
+        alert("PIN lama Anda salah!");
+        return;
+      }
+      if (!newPin || newPin.length < 4) {
+        alert("PIN baru minimal 4 karakter!");
+        return;
+      }
+
+      adminPinStored = newPin;
+      localStorage.setItem('py_admin_pin', newPin);
+      alert("PIN Admin berhasil diubah!");
+      closeSettingsModal();
+    }
+
+    // MODAL CATAT PENGELUARAN
+    function openExpenseModal() { document.getElementById('expense-modal').classList.remove('hidden'); }
+    function closeExpenseModal() { document.getElementById('expense-modal').classList.add('hidden'); }
+
+    function saveExpense() {
+      const category = document.getElementById('exp-category').value;
+      const desc = document.getElementById('exp-desc').value.trim();
+      const amount = parseFloat(document.getElementById('exp-amount').value) || 0;
+
+      if (!desc || amount <= 0) {
+        alert("Mohon isi deskripsi dan nominal pengeluaran!");
+        return;
+      }
+
+      expenses.unshift({ date: new Date().toISOString(), category, desc, amount });
+      localStorage.setItem('py_expenses', JSON.stringify(expenses));
+      closeExpenseModal();
+      renderAdminDashboard();
+    }
+
+    calculateTotal();
+  </script>
+</body>
+</html>
