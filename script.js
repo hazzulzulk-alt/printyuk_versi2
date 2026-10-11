@@ -231,7 +231,7 @@ function processOrder() {
                  '*Total:* ' + encodeURIComponent(formatRupiah(orderData.totalPrice)) + '%0A' +
                  '*Metode Pembayaran:* ' + encodeURIComponent(orderData.paymentMethod);
 
-    window.open('https://wa.me/6281234567890?text=' + textWA, '_blank');
+    window.open('https://wa.me/6285658323189?text=' + textWA, '_blank');
 
     alert('BERHASIL! Pesanan Anda telah dibuat.\nID Pesanan: ' + orderData.id);
     
