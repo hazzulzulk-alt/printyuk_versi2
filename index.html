@@ -16,11 +16,11 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
   </script>
 
+  <!-- JSZIP LIBRARY (UNTUK BACA HALAMAN WORD DOCX) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <!-- CHART.JS LIBRARY -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- MIDTRANS SNAP SDK (PRODUCTION MODE) -->
-  <script src="https://app.midtrans.com/snap/snap.js" data-client-key="Mid-client-RlbB40_AG5BiZoNq"></script>
 
   <script>
     tailwind.config = {
@@ -57,11 +57,11 @@
       
       <!-- NAV TABS -->
       <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
-        <button id="tab-client-btn" onclick="switchTab('client')" class="px-4 py-2 rounded-lg font-bold text-xs md:text-sm bg-white text-brand-600 shadow-sm transition-all flex items-center gap-1.5">
+        <button id="tab-client-btn" type="button" onclick="switchTab('client')" class="px-4 py-2 rounded-lg font-bold text-xs md:text-sm bg-white text-brand-600 shadow-sm transition-all flex items-center gap-1.5">
           <i data-lucide="shopping-cart" class="w-4 h-4"></i>
           <span>Portal Pemesanan</span>
         </button>
-        <button id="tab-admin-btn" onclick="switchTab('admin')" class="px-4 py-2 rounded-lg font-bold text-xs md:text-sm text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+        <button id="tab-admin-btn" type="button" onclick="switchTab('admin')" class="px-4 py-2 rounded-lg font-bold text-xs md:text-sm text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
           <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
           <span>Dashboard Admin</span>
         </button>
@@ -69,9 +69,7 @@
     </div>
   </header>
 
-  <!-- ========================================== -->
   <!-- TAB 1: PORTAL PEMESANAN PELANGGAN -->
-  <!-- ========================================== -->
   <div id="client-view" class="space-y-0">
     <section class="bg-gradient-to-b from-brand-50 to-slate-50 py-12 md:py-16 border-b border-slate-200">
       <div class="max-w-6xl mx-auto px-4 text-center space-y-4">
@@ -84,6 +82,16 @@
         <p class="max-w-2xl mx-auto text-slate-600 text-sm md:text-base">
           Selesaikan transaksi langsung di website via QRIS/Transfer Bank atau bayar COD saat berkas diantar!
         </p>
+
+        <!-- FITUR LACAK PESANAN KOSTUMER -->
+        <div class="max-w-md mx-auto pt-2">
+          <div class="bg-white p-2 rounded-2xl shadow-md border border-slate-200 flex gap-2">
+            <input type="text" id="track-input" placeholder="Masukkan ID Pesanan / No. WA..." class="w-full bg-slate-50 border-0 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none">
+            <button type="button" onclick="trackOrderStatus()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2 rounded-xl text-xs shrink-0 flex items-center gap-1">
+              <i data-lucide="search" class="w-3.5 h-3.5"></i> Cek Status
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -97,12 +105,12 @@
               <span class="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs">1</span>
               Upload File / Dokumen
             </label>
-            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition-colors bg-slate-50 relative">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition-colors bg-slate-50 relative overflow-hidden">
               <div class="flex flex-col items-center gap-2 cursor-pointer relative" id="upload-placeholder">
                 <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.png">
                 <i data-lucide="upload-cloud" class="w-10 h-10 text-brand-500"></i>
                 <p class="font-semibold text-slate-700 text-sm">Klik atau drag & drop file ke sini</p>
-                <p class="text-xs text-slate-400">PDF, Word, PowerPoint, atau Gambar (Max 50MB)</p>
+                <p class="text-xs text-slate-400">PDF, Word, PowerPoint, atau Gambar (Max 3.5MB)</p>
               </div>
 
               <div id="file-info" class="hidden flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 text-left relative z-20">
@@ -216,21 +224,17 @@
               <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1">Metode Pembayaran</label>
                 <select id="payment-method" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold text-slate-800">
-                  <optgroup label="── Pembayaran Digital Direct ──">
-                    <option value="QRIS Direct">QRIS All Payment (GoPay/ShopeePay/OVO/Dana/m-Banking)</option>
-                    <option value="Transfer BCA Direct">Transfer Bank BCA (Konfirmasi Direct Web)</option>
-                    <option value="Transfer Mandiri Direct">Transfer Bank Mandiri (Konfirmasi Direct Web)</option>
-                  </optgroup>
-                  <optgroup label="── Bayar Manual di Tempat ──">
-                    <option value="COD Kampus">COD (Bayar Cash ke Kurir saat Berkas Tiba)</option>
-                    <option value="Bayar di Toko">Bayar Cash di Toko (Saat Ambil Berkas)</option>
-                  </optgroup>
+                  <option value="Bayar di Toko">Bayar Cash di Toko (Saat Ambil Berkas)</option>
+                  <option value="COD Kampus">COD (Bayar Cash ke Kurir saat Berkas Tiba)</option>
+                  <option value="QRIS Direct">QRIS All Payment (GoPay/ShopeePay/OVO/Dana/m-Banking)</option>
+                  <option value="Transfer BCA Direct">Transfer Bank BCA</option>
+                  <option value="Transfer Mandiri Direct">Transfer Bank Mandiri</option>
                 </select>
               </div>
 
               <div>
                 <label class="block text-xs font-medium text-slate-600 mb-1">Catatan Tambahan (Opsional)</label>
-                <textarea id="notes" placeholder="Contoh: Print halaman 1-10 saja, atau Mika warna biru..." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none h-20 resize-none"></textarea>
+                <textarea id="notes" placeholder="Contoh: Print halaman 1-10 saja..." class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none h-20 resize-none"></textarea>
               </div>
             </div>
           </div>
@@ -238,250 +242,160 @@
         </div>
       </div>
 
-      <!-- Rincian Biaya & Order (Kanan) -->
+      <!-- Rincian Biaya & Riwayat Pesanan Saya -->
       <div class="lg:col-span-5 space-y-6">
-        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 sticky top-24">
-          <h2 class="text-lg font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between">
-            <span>Rincian Total Biaya</span>
-            <i data-lucide="calculator" class="w-5 h-5 text-brand-500"></i>
-          </h2>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 sticky top-24 space-y-6">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between">
+              <span>Rincian Total Biaya</span>
+              <i data-lucide="calculator" class="w-5 h-5 text-brand-500"></i>
+            </h2>
 
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between text-slate-600">
-              <span>Biaya Cetak per Lembar:</span>
-              <span id="price-per-sheet" class="font-semibold text-slate-800">Rp 500</span>
-            </div>
-            <div class="flex justify-between text-slate-600">
-              <span>Total Lembar Kertas:</span>
-              <span id="total-sheets" class="font-semibold text-slate-800">1 Lembar</span>
-            </div>
-            <div class="flex justify-between text-slate-600">
-              <span>Subtotal Cetak:</span>
-              <span id="subtotal-print" class="font-semibold text-slate-800">Rp 500</span>
-            </div>
-            <div class="flex justify-between text-slate-600">
-              <span>Biaya Jilid:</span>
-              <span id="binding-cost" class="font-semibold text-slate-800">Rp 0</span>
-            </div>
-            <div class="flex justify-between text-slate-600">
-              <span>Ongkos Kirim:</span>
-              <span id="delivery-cost" class="font-semibold text-slate-800">Rp 0</span>
-            </div>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between text-slate-600">
+                <span>Biaya Cetak per Lembar:</span>
+                <span id="price-per-sheet" class="font-semibold text-slate-800">Rp 500</span>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Total Lembar Kertas:</span>
+                <span id="total-sheets" class="font-semibold text-slate-800">1 Lembar</span>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Subtotal Cetak:</span>
+                <span id="subtotal-print" class="font-semibold text-slate-800">Rp 500</span>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Biaya Jilid:</span>
+                <span id="binding-cost" class="font-semibold text-slate-800">Rp 0</span>
+              </div>
+              <div class="flex justify-between text-slate-600">
+                <span>Ongkos Kirim:</span>
+                <span id="delivery-cost" class="font-semibold text-slate-800">Rp 0</span>
+              </div>
 
-            <div class="pt-4 border-t border-slate-100 flex justify-between items-end">
-              <div>
-                <span class="text-xs text-slate-400 block font-medium">TOTAL HARUS DIBAYAR</span>
-                <span id="grand-total" class="text-2xl font-extrabold text-brand-600">Rp 500</span>
+              <div class="pt-4 border-t border-slate-100 flex justify-between items-end">
+                <div>
+                  <span class="text-xs text-slate-400 block font-medium">TOTAL HARUS DIBAYAR</span>
+                  <span id="grand-total" class="text-2xl font-extrabold text-brand-600">Rp 500</span>
+                </div>
               </div>
             </div>
+
+            <button type="button" id="btn-process-order" onclick="processOrder()" class="w-full mt-6 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer relative z-30">
+              <i data-lucide="credit-card" class="w-5 h-5"></i>
+              <span>Bayar & Proses Pesanan</span>
+            </button>
           </div>
 
-          <button type="button" onclick="processOrder()" class="w-full mt-6 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-            <i data-lucide="credit-card" class="w-5 h-5"></i>
-            <span>Bayar & Proses Pesanan</span>
-          </button>
-
-          <p class="text-xs text-center text-slate-500 mt-3">
-            🔒 Transaksi aman & terkunci. Berkas diproses setelah pembayaran terverifikasi.
-          </p>
+          <!-- KARTU RIWAYAT PESANAN SAYA -->
+          <div class="pt-4 border-t border-slate-100">
+            <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center justify-between">
+              <span>Riwayat Pesanan Saya</span>
+              <i data-lucide="history" class="w-4 h-4 text-brand-600"></i>
+            </h3>
+            <div id="client-history-list" class="space-y-2 text-xs text-slate-600"></div>
+          </div>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- ========================================== -->
-  <!-- MODAL PEMBAYARAN DIRECT WEBSITE -->
-  <!-- ========================================== -->
-  <div id="payment-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl text-center relative">
-      <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto">
-        <i data-lucide="qr-code" class="w-6 h-6"></i>
+  <!-- MODAL TRACKING KOSTUMER -->
+  <div id="track-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-900">Status Pengerjaan Pesanan</h3>
+        <button type="button" onclick="document.getElementById('track-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
       </div>
-      <div>
-        <h3 class="font-bold text-lg text-slate-900" id="pay-modal-title">Selesaikan Pembayaran</h3>
-        <p class="text-xs text-slate-500 mt-1" id="pay-modal-subtitle">Silakan scan QRIS atau transfer ke rekening resmi berikut:</p>
-      </div>
-
-      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-3">
-        <div class="flex justify-between items-center text-xs pb-2 border-b border-slate-200">
-          <span class="text-slate-500">Nominal Transfer:</span>
-          <span id="pay-modal-amount" class="font-extrabold text-brand-600 text-base">Rp 0</span>
-        </div>
-        <div id="pay-modal-details" class="text-xs space-y-2 text-slate-700">
-          <!-- Dynamic Content -->
-        </div>
-      </div>
-
-      <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-800 text-left flex items-start gap-2">
-        <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
-        <span>Setelah mentransfer, klik <strong>"Saya Sudah Bayar"</strong> agar transaksi terkunci ke sistem Admin.</span>
-      </div>
-
-      <div class="flex gap-2">
-        <button type="button" onclick="closePaymentModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold text-xs">Batal</button>
-        <button type="button" onclick="confirmPaymentDirect()" class="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow-md">Saya Sudah Bayar</button>
-      </div>
+      <div id="track-modal-content" class="text-xs space-y-2"></div>
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- TAB 2: DASHBOARD ADMIN & LOGIN VISUAL -->
-  <!-- ========================================== -->
+  <!-- TAB 2: DASHBOARD ADMIN -->
   <div id="admin-view" class="hidden max-w-6xl w-full mx-auto px-4 py-8 space-y-6">
-    
-    <!-- LOGIN GATE VISUAL WITH BRANDING -->
     <div id="admin-pin-gate" class="max-w-md mx-auto my-8 bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
-      <!-- HEADER VISUAL BRANDING -->
-      <div class="bg-gradient-to-r from-brand-600 to-brand-700 p-8 text-center text-white space-y-3 relative overflow-hidden">
-        <div class="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto border border-white/20 shadow-inner">
-          <i data-lucide="printer" class="w-10 h-10 text-white"></i>
-        </div>
-        <div>
-          <h2 class="text-2xl font-extrabold tracking-tight">PrintYuk!</h2>
-          <p class="text-xs text-brand-100 font-medium">System Portal Admin Tanjungpinang</p>
-        </div>
-        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
-      </div>
-
-      <!-- FORM USERNAME & PASSWORD -->
       <form onsubmit="event.preventDefault(); unlockAdmin();" class="p-8 space-y-5">
-        <div class="text-center mb-2">
-          <h3 class="font-bold text-slate-800 text-base">Masuk ke Dashboard</h3>
-          <p class="text-xs text-slate-500">Gunakan akun admin resmi untuk mengelola pesanan.</p>
-        </div>
-
+        <h3 class="font-bold text-slate-800 text-center text-base">Masuk Portal Admin</h3>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">Username Admin</label>
-          <div class="relative">
-            <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
-            <input type="text" id="admin-username" placeholder="Masukkan username" required class="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-3 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
-          </div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Username Admin</label>
+          <input type="text" id="admin-username" required class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
         </div>
-
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">Password Admin</label>
-          <div class="relative">
-            <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
-            <input type="password" id="admin-password" placeholder="••••••••" required class="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-3 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
-          </div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password Admin</label>
+          <input type="password" id="admin-password" required class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
         </div>
-
-        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md transition-all text-xs flex items-center justify-center gap-2">
-          <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Sekarang
-        </button>
-
-        <p class="text-[11px] text-slate-400 text-center pt-2">
-          Akun Default: User: <strong class="text-slate-700">admin</strong> | Pass: <strong class="text-slate-700">admin123</strong>
-        </p>
+        <button type="submit" class="w-full bg-brand-600 text-white font-bold py-3 rounded-xl text-xs">Masuk Sekarang</button>
       </form>
     </div>
 
-    <!-- MAIN ADMIN DASHBOARD CONTENT -->
     <div id="admin-content" class="hidden space-y-6">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border shadow-sm">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">Dashboard Manajemen & Pembukuan</h2>
-          <p class="text-xs text-slate-500">Verifikasi pembayaran, proses cetak, dan kelola keuangan toko.</p>
+          <h2 class="text-xl font-bold text-slate-900">Dashboard Admin & Pembukuan</h2>
         </div>
         <div class="flex flex-wrap gap-2">
-          <!-- TOMBOL DOWNLOAD EXCEL LOKAL -->
-          <button type="button" onclick="downloadFinancialReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm">
-            <i data-lucide="download-cloud" class="w-4 h-4"></i> Download Laporan Excel
-          </button>
-          <button type="button" onclick="openManualOrderModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm">
-            <i data-lucide="plus-square" class="w-4 h-4"></i> Input Offline
-          </button>
-          <button type="button" onclick="openExpenseModal()" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all">
-            <i data-lucide="minus-circle" class="w-4 h-4"></i> Catat Pengeluaran
-          </button>
-          <button type="button" onclick="openSettingsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all">
-            <i data-lucide="key" class="w-4 h-4"></i> Akun Admin
-          </button>
+          <button type="button" onclick="downloadFinancialReport()" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-xs">Download Excel</button>
+          <button type="button" onclick="openManualOrderModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-xs">Input Offline</button>
+          <button type="button" onclick="openExpenseModal()" class="bg-red-50 text-red-700 px-4 py-2 rounded-xl font-bold text-xs">Catat Pengeluaran</button>
+          <button type="button" onclick="openSettingsModal()" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl font-bold text-xs">Akun Admin</button>
         </div>
       </div>
 
-      <!-- FILTER RENTANG WAKTU LOKAL -->
-      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <i data-lucide="filter" class="w-4 h-4 text-brand-600"></i>
-          <span class="text-xs font-bold text-slate-700">Filter Periode Pembukuan & Grafik:</span>
-        </div>
-        <select id="time-filter" onchange="renderAdminDashboard()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+      <div class="bg-white p-4 rounded-2xl border flex items-center justify-between">
+        <span class="text-xs font-bold">Filter Periode:</span>
+        <select id="time-filter" onchange="renderAdminDashboard()" class="bg-slate-50 border rounded-xl px-3 py-2 text-xs font-bold">
           <option value="today">Hari Ini</option>
-          <option value="week">Minggu Ini (7 Hari Terakhir)</option>
+          <option value="week">Minggu Ini</option>
           <option value="month" selected>Bulan Ini</option>
           <option value="year">Tahun Ini</option>
-          <option value="all">Semua Waktu</option>
         </select>
       </div>
 
-      <!-- METRIK KEUANGAN CARDS -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-gradient-to-br from-brand-600 to-brand-700 text-white p-6 rounded-2xl shadow-sm space-y-1">
-          <p class="text-xs uppercase font-bold text-brand-100">Total Pemasukan (Lunas)</p>
+        <div class="bg-brand-600 text-white p-6 rounded-2xl">
+          <p class="text-xs uppercase font-bold">Total Pemasukan</p>
           <p id="stat-income" class="text-3xl font-extrabold">Rp 0</p>
-          <p class="text-xs text-brand-200">Berdasarkan periode filter</p>
         </div>
-
-        <div class="bg-gradient-to-br from-red-600 to-red-700 text-white p-6 rounded-2xl shadow-sm space-y-1">
-          <p class="text-xs uppercase font-bold text-red-100">Total Pengeluaran Real</p>
+        <div class="bg-red-600 text-white p-6 rounded-2xl">
+          <p class="text-xs uppercase font-bold">Total Pengeluaran</p>
           <p id="stat-expense" class="text-3xl font-extrabold">Rp 0</p>
-          <p class="text-xs text-red-200">Catatan operasional toko</p>
         </div>
-
-        <div class="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-6 rounded-2xl shadow-sm space-y-1">
-          <p class="text-xs uppercase font-bold text-emerald-100">Laba Bersih Real (Profit)</p>
+        <div class="bg-emerald-600 text-white p-6 rounded-2xl">
+          <p class="text-xs uppercase font-bold">Laba Bersih</p>
           <p id="stat-profit" class="text-3xl font-extrabold">Rp 0</p>
-          <p class="text-xs text-emerald-200">Pemasukan minus Pengeluaran</p>
         </div>
       </div>
 
-      <!-- GRAFIK MURNI DARI DATA REAL -->
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="font-bold text-slate-800 text-base">Grafik Pembukuan Real</h3>
-          <span class="text-xs text-slate-400">Pemasukan vs Pengeluaran Periode Ini</span>
-        </div>
-        <div class="h-64">
-          <canvas id="financialChart"></canvas>
-        </div>
+      <div class="bg-white p-6 rounded-2xl border shadow-sm">
+        <h3 class="font-bold text-base mb-2">Grafik Pembukuan</h3>
+        <div class="h-64"><canvas id="financialChart"></canvas></div>
       </div>
 
-      <!-- TABEL PESANAN MASUK -->
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i data-lucide="file-check" class="w-5 h-5 text-brand-600"></i>
-          Daftar Pesanan Terverifikasi (Siap Cetak)
-        </h3>
+      <div class="bg-white p-6 rounded-2xl border shadow-sm">
+        <h3 class="font-bold text-slate-800 text-base mb-4">Daftar Pesanan Terverifikasi</h3>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
-            <thead class="bg-slate-100 text-slate-700 uppercase font-bold">
+            <thead class="bg-slate-100 font-bold">
               <tr>
                 <th class="p-3">ID / Waktu</th>
                 <th class="p-3">Pelanggan</th>
-                <th class="p-3">Rincian & Spesifikasi Cetak</th>
-                <th class="p-3">File Dokumen</th>
-                <th class="p-3">Total Biaya</th>
-                <th class="p-3">Status Verifikasi</th>
-                <th class="p-3">Aksi Admin</th>
+                <th class="p-3">Spesifikasi</th>
+                <th class="p-3">File</th>
+                <th class="p-3">Total</th>
+                <th class="p-3">Status Pengerjaan (Admin)</th>
+                <th class="p-3">Aksi</th>
               </tr>
             </thead>
-            <tbody id="order-table-body" class="divide-y divide-slate-100">
-              <!-- Dynamic Rows -->
-            </tbody>
+            <tbody id="order-table-body" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- TABEL PENGELUARAN -->
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
-          <i data-lucide="receipt" class="w-5 h-5 text-red-600"></i>
-          Catatan Pengeluaran Operasional
-        </h3>
+      <div class="bg-white p-6 rounded-2xl border shadow-sm">
+        <h3 class="font-bold text-slate-800 text-base mb-4">Catat Pengeluaran Operasional</h3>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
-            <thead class="bg-slate-100 text-slate-700 uppercase font-bold">
+            <thead class="bg-slate-100 font-bold">
               <tr>
                 <th class="p-3">Tanggal</th>
                 <th class="p-3">Kategori</th>
@@ -489,647 +403,60 @@
                 <th class="p-3">Nominal</th>
               </tr>
             </thead>
-            <tbody id="expense-table-body" class="divide-y divide-slate-100">
-              <!-- Dynamic Rows -->
-            </tbody>
+            <tbody id="expense-table-body" class="divide-y divide-slate-100"></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL INPUT TRANSAKSI MANUAL -->
-  <div id="manual-order-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-      <h3 class="font-bold text-lg text-slate-900">Input Transaksi Offline / Walk-in</h3>
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-medium text-slate-600 mb-1">Nama Pelanggan</label>
-          <input type="text" id="manual-cust-name" placeholder="Pelanggan Toko" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
-        </div>
-        <div>
-          <label class="block font-medium text-slate-600 mb-1">Keterangan Layanan</label>
-          <input type="text" id="manual-desc" placeholder="Contoh: Cetak HVS A4 50 Lembar + Jilid Lakban" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
-        </div>
-        <div>
-          <label class="block font-medium text-slate-600 mb-1">Nominal Pemasukan (Rp)</label>
-          <input type="number" id="manual-amount" placeholder="30000" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
-        </div>
-        <div>
-          <label class="block font-medium text-slate-600 mb-1">Metode Pembayaran</label>
-          <select id="manual-payment-method" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-bold">
-            <option value="Tunai (Cash)">Tunai (Cash)</option>
-            <option value="QRIS">QRIS / e-Wallet</option>
-            <option value="Transfer Bank">Transfer Bank</option>
-          </select>
-        </div>
-      </div>
-      <div class="flex gap-2 pt-2">
-        <button type="button" onclick="closeManualOrderModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs">Batal</button>
-        <button type="button" onclick="saveManualOrder()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-xs">Simpan Pemasukan</button>
+  <!-- MODALS ADMIN -->
+  <div id="manual-order-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4">
+      <h3 class="font-bold text-lg">Input Transaksi Offline</h3>
+      <input type="text" id="manual-cust-name" placeholder="Nama Pelanggan" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <input type="text" id="manual-desc" placeholder="Keterangan Layanan" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <input type="number" id="manual-amount" placeholder="Nominal Rp" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <select id="manual-payment-method" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs font-bold">
+        <option value="Tunai (Cash)">Tunai (Cash)</option>
+        <option value="QRIS">QRIS</option>
+      </select>
+      <div class="flex gap-2">
+        <button type="button" onclick="closeManualOrderModal()" class="w-1/2 bg-slate-100 py-2 rounded-xl font-bold text-xs">Batal</button>
+        <button type="button" onclick="saveManualOrder()" class="w-1/2 bg-emerald-600 text-white py-2 rounded-xl font-bold text-xs">Simpan</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL PENGATURAN GANTI AKUN ADMIN -->
-  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-      <h3 class="font-bold text-lg text-slate-900">Ganti Username & Password Admin</h3>
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-medium text-slate-600 mb-1">Username Baru</label>
-          <input type="text" id="new-username" placeholder="admin" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold">
-        </div>
-        <div>
-          <label class="block font-medium text-slate-600 mb-1">Password Baru</label>
-          <input type="password" id="new-password" placeholder="admin123" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold">
-        </div>
-      </div>
-      <div class="flex gap-2 pt-2">
-        <button type="button" onclick="closeSettingsModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs">Batal</button>
-        <button type="button" onclick="changeAdminCredentials()" class="w-1/2 bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl font-bold text-xs">Simpan Perubahan</button>
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4">
+      <h3 class="font-bold text-lg">Ganti Akun Admin</h3>
+      <input type="text" id="new-username" placeholder="Username Baru" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <input type="password" id="new-password" placeholder="Password Baru" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <div class="flex gap-2">
+        <button type="button" onclick="closeSettingsModal()" class="w-1/2 bg-slate-100 py-2 rounded-xl font-bold text-xs">Batal</button>
+        <button type="button" onclick="changeAdminCredentials()" class="w-1/2 bg-brand-600 text-white py-2 rounded-xl font-bold text-xs">Simpan</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL CATAT PENGELUARAN -->
-  <div id="expense-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-      <h3 class="font-bold text-lg text-slate-900">Catat Pengeluaran Baru</h3>
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-medium text-slate-600 mb-1">Kategori</label>
-          <select id="exp-category" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
-            <option value="Bahan Baku">Bahan Baku (Kertas/Tinta/Jilid)</option>
-            <option value="Operasional">Operasional (Listrik/Internet)</option>
-            <option value="Lainnya">Lain-lain</option>
-          </select>
-        </div>
-        <div>
-          <label class="block font-medium text-slate-600 mb-1">Deskripsi Pengeluaran</label>
-          <input type="text" id="exp-desc" placeholder="Contoh: Beli Kertas HVS 70gr 5 Rim" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
-        </div>
-        <div>
-          <label class="block font-medium text-slate-600 mb-1">Nominal (Rp)</label>
-          <input type="number" id="exp-amount" placeholder="250000" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
-        </div>
-      </div>
-      <div class="flex gap-2 pt-2">
-        <button type="button" onclick="closeExpenseModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs">Batal</button>
-        <button type="button" onclick="saveExpense()" class="w-1/2 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-bold text-xs">Simpan</button>
+  <div id="expense-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4">
+      <h3 class="font-bold text-lg">Catat Pengeluaran Baru</h3>
+      <select id="exp-category" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+        <option value="Bahan Baku">Bahan Baku</option>
+        <option value="Operasional">Operasional</option>
+      </select>
+      <input type="text" id="exp-desc" placeholder="Deskripsi Pengeluaran" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <input type="number" id="exp-amount" placeholder="Nominal Rp" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <div class="flex gap-2">
+        <button type="button" onclick="closeExpenseModal()" class="w-1/2 bg-slate-100 py-2 rounded-xl font-bold text-xs">Batal</button>
+        <button type="button" onclick="saveExpense()" class="w-1/2 bg-red-600 text-white py-2 rounded-xl font-bold text-xs">Simpan</button>
       </div>
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="bg-slate-900 text-slate-400 py-8 mt-auto text-center text-sm border-t border-slate-800">
-    <div class="max-w-6xl mx-auto px-4 space-y-3">
-      <p class="font-semibold text-slate-200">PrintYuk! Tanjungpinang</p>
-      <p class="text-xs text-slate-500 max-w-md mx-auto">Solusi cetak dokumen online cepat & praktis untuk Mahasiswa dan Pekerja Kantoran di Tanjungpinang, Kepulauan Riau.</p>
-      <p class="text-xs text-slate-600 pt-3 border-t border-slate-800">&copy; 2026 PrintYuk Tanjungpinang. All rights reserved.</p>
-    </div>
-  </footer>
-
-  <!-- SCRIPT LOGIKA UTAMA -->
-  <script>
-    lucide.createIcons();
-
-    let orders = JSON.parse(localStorage.getItem('py_orders') || '[]');
-    let expenses = JSON.parse(localStorage.getItem('py_expenses') || '[]');
-    let adminUserStored = localStorage.getItem('py_admin_user') || 'admin';
-    let adminPassStored = localStorage.getItem('py_admin_pass') || 'admin123';
-    let currentAttachedFile = null;
-    let tempPendingOrder = null;
-    let myChart = null;
-
-    const paperTypeEl = document.getElementById('paper-type');
-    const printColorEl = document.getElementById('print-color');
-    const printSidesEl = document.getElementById('print-sides');
-    const bindingTypeEl = document.getElementById('binding-type');
-    const pageCountEl = document.getElementById('page-count');
-    const copyCountEl = document.getElementById('copy-count');
-    const deliveryOptionEl = document.getElementById('delivery-option');
-    const paymentMethodEl = document.getElementById('payment-method');
-    const custNameEl = document.getElementById('cust-name');
-    const custPhoneEl = document.getElementById('cust-phone');
-    const notesEl = document.getElementById('notes');
-
-    const pricePerSheetEl = document.getElementById('price-per-sheet');
-    const totalSheetsEl = document.getElementById('total-sheets');
-    const subtotalPrintEl = document.getElementById('subtotal-print');
-    const bindingCostEl = document.getElementById('binding-cost');
-    const deliveryCostEl = document.getElementById('delivery-cost');
-    const grandTotalEl = document.getElementById('grand-total');
-
-    const fileInput = document.getElementById('file-input');
-    const uploadPlaceholder = document.getElementById('upload-placeholder');
-    const fileInfo = document.getElementById('file-info');
-    const fileNameEl = document.getElementById('file-name');
-    const fileSizeEl = document.getElementById('file-size');
-    const removeFileBtn = document.getElementById('remove-file');
-
-    function formatRupiah(amount) {
-      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
-    }
-
-    function switchTab(type) {
-      const clientView = document.getElementById('client-view');
-      const adminView = document.getElementById('admin-view');
-      const clientBtn = document.getElementById('tab-client-btn');
-      const adminBtn = document.getElementById('tab-admin-btn');
-
-      if (type === 'client') {
-        clientView.classList.remove('hidden');
-        adminView.classList.add('hidden');
-        clientBtn.className = "px-4 py-2 rounded-lg font-bold text-xs md:text-sm bg-white text-brand-600 shadow-sm transition-all flex items-center gap-1.5";
-        adminBtn.className = "px-4 py-2 rounded-lg font-bold text-xs md:text-sm text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5";
-      } else {
-        clientView.classList.add('hidden');
-        adminView.classList.remove('hidden');
-        adminBtn.className = "px-4 py-2 rounded-lg font-bold text-xs md:text-sm bg-white text-brand-600 shadow-sm transition-all flex items-center gap-1.5";
-        clientBtn.className = "px-4 py-2 rounded-lg font-bold text-xs md:text-sm text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5";
-      }
-    }
-
-    function calculateTotal() {
-      const basePaperPrice = parseInt(paperTypeEl.value) || 0;
-      const colorExtra = parseInt(printColorEl.value) || 0;
-      const sides = parseInt(printSidesEl.value) || 1;
-      const bindingCost = parseInt(bindingTypeEl.value) || 0;
-      const deliveryCost = parseInt(deliveryOptionEl.value) || 0;
-      const pageCount = Math.max(1, parseInt(pageCountEl.value) || 1);
-      const copyCount = Math.max(1, parseInt(copyCountEl.value) || 1);
-
-      let sheetsPerPage = (sides === 2) ? Math.ceil(pageCount / 2) : pageCount;
-      let totalSheets = sheetsPerPage * copyCount;
-      let pricePerSheet = basePaperPrice + colorExtra;
-
-      let subtotalPrint = pricePerSheet * totalSheets;
-      let totalBinding = bindingCost * copyCount;
-      let grandTotal = subtotalPrint + totalBinding + deliveryCost;
-
-      pricePerSheetEl.textContent = formatRupiah(pricePerSheet);
-      totalSheetsEl.textContent = totalSheets + " Lembar";
-      subtotalPrintEl.textContent = formatRupiah(subtotalPrint);
-      bindingCostEl.textContent = formatRupiah(totalBinding);
-      deliveryCostEl.textContent = formatRupiah(deliveryCost);
-      grandTotalEl.textContent = formatRupiah(grandTotal);
-
-      return { pricePerSheet, totalSheets, subtotalPrint, totalBinding, deliveryCost, grandTotal };
-    }
-
-    [paperTypeEl, printColorEl, printSidesEl, bindingTypeEl, pageCountEl, copyCountEl, deliveryOptionEl].forEach(el => {
-      el.addEventListener('change', calculateTotal);
-      el.addEventListener('input', calculateTotal);
-    });
-
-    fileInput.addEventListener('change', async function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async function(event) {
-        currentAttachedFile = {
-          name: file.name,
-          size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-          dataUri: event.target.result
-        };
-
-        fileNameEl.textContent = file.name;
-        fileSizeEl.textContent = currentAttachedFile.size;
-        uploadPlaceholder.classList.add('hidden');
-        fileInfo.classList.remove('hidden');
-
-        if (file.type === 'application/pdf') {
-          try {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            pageCountEl.value = pdf.numPages;
-            calculateTotal();
-          } catch (err) {
-            console.error("Gagal membaca file PDF:", err);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-
-    removeFileBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      fileInput.value = '';
-      currentAttachedFile = null;
-      uploadPlaceholder.classList.remove('hidden');
-      fileInfo.classList.add('hidden');
-      pageCountEl.value = 1;
-      calculateTotal();
-    });
-
-    // PROSES ORDER DENGAN INTEGRASI LANGSUNG
-    function processOrder() {
-      const custName = custNameEl.value.trim();
-      const custPhone = custPhoneEl.value.trim();
-
-      if (!custName || !custPhone) {
-        alert("Mohon isi Nama Pemesan dan Nomor WhatsApp terlebih dahulu!");
-        return;
-      }
-
-      if (!currentAttachedFile) {
-        alert("Mohon unggah file/dokumen yang ingin dicetak!");
-        return;
-      }
-
-      const calc = calculateTotal();
-      const chosenPayment = paymentMethodEl.value;
-
-      const orderData = {
-        id: 'PY-' + Math.floor(100000 + Math.random() * 900000),
-        date: new Date().toISOString(),
-        custName: custName,
-        custPhone: custPhone,
-        paperName: paperTypeEl.options[paperTypeEl.selectedIndex].text,
-        colorName: printColorEl.options[printColorEl.selectedIndex].text,
-        sidesName: printSidesEl.options[printSidesEl.selectedIndex].text,
-        bindingName: bindingTypeEl.options[bindingTypeEl.selectedIndex].text,
-        deliveryName: deliveryOptionEl.options[deliveryOptionEl.selectedIndex].text,
-        pageCount: pageCountEl.value,
-        copyCount: copyCountEl.value,
-        totalSheets: calc.totalSheets,
-        notes: notesEl.value.trim() || '-',
-        paymentMethod: chosenPayment,
-        totalPrice: calc.grandTotal,
-        paymentStatus: 'Belum Lunas',
-        file: currentAttachedFile
-      };
-
-      if (chosenPayment.includes('Direct') || chosenPayment.includes('QRIS')) {
-        // Tampilkan Modal Pembayaran QRIS / Direct
-        tempPendingOrder = orderData;
-        document.getElementById('pay-modal-amount').textContent = formatRupiah(calc.grandTotal);
-        
-        if (chosenPayment.includes('BCA')) {
-          document.getElementById('pay-modal-details').innerHTML = `
-            <div class="space-y-1 py-1">
-              <p class="text-slate-500">Bank Tujuan:</p>
-              <p class="font-bold text-slate-900">Bank BCA</p>
-              <p class="text-slate-500 mt-2">Nomor Rekening:</p>
-              <p class="font-extrabold text-brand-600 text-sm tracking-wider">1234 5678 90</p>
-              <p class="text-slate-500">Atas Nama: <strong class="text-slate-800">PrintYuk Tanjungpinang</strong></p>
-            </div>`;
-        } else if (chosenPayment.includes('Mandiri')) {
-          document.getElementById('pay-modal-details').innerHTML = `
-            <div class="space-y-1 py-1">
-              <p class="text-slate-500">Bank Tujuan:</p>
-              <p class="font-bold text-slate-900">Bank Mandiri</p>
-              <p class="text-slate-500 mt-2">Nomor Rekening:</p>
-              <p class="font-extrabold text-brand-600 text-sm tracking-wider">0987 6543 21</p>
-              <p class="text-slate-500">Atas Nama: <strong class="text-slate-800">PrintYuk Tanjungpinang</strong></p>
-            </div>`;
-        } else {
-          document.getElementById('pay-modal-details').innerHTML = `
-            <div class="text-center py-2 space-y-2">
-              <div class="bg-white p-3 inline-block rounded-xl border border-slate-300 shadow-inner">
-                <i data-lucide="qr-code" class="w-32 h-32 mx-auto text-slate-800"></i>
-              </div>
-              <p class="font-bold text-slate-900">QRIS PrintYuk Tanjungpinang</p>
-              <p class="text-[10px] text-slate-500">Scan via GoPay, ShopeePay, OVO, Dana, LinkAja, atau m-Banking</p>
-            </div>`;
-        }
-        
-        lucide.createIcons();
-        document.getElementById('payment-modal').classList.remove('hidden');
-      } else {
-        // OPSI COD / CASH DI TOKO
-        orderData.paymentStatus = 'Belum Lunas (COD/Cash)';
-        orders.unshift(orderData);
-        localStorage.setItem('py_orders', JSON.stringify(orders));
-        alert(`Pesanan COD berhasil dibuat! Silakan lakukan pembayaran tunai saat berkas diantar atau diambil.`);
-        resetOrderForm();
-      }
-    }
-
-    function closePaymentModal() {
-      document.getElementById('payment-modal').classList.add('hidden');
-      tempPendingOrder = null;
-    }
-
-    function confirmPaymentDirect() {
-      if (tempPendingOrder) {
-        tempPendingOrder.paymentStatus = 'Menunggu Konfirmasi Lunas';
-        orders.unshift(tempPendingOrder);
-        localStorage.setItem('py_orders', JSON.stringify(orders));
-        alert("Terima kasih! Pesanan & konfirmasi pembayaran Anda telah masuk ke sistem Admin. Berkas akan diproses begitu Admin memverifikasi dana Anda.");
-        closePaymentModal();
-        resetOrderForm();
-      }
-    }
-
-    function resetOrderForm() {
-      custNameEl.value = '';
-      custPhoneEl.value = '';
-      notesEl.value = '';
-      fileInput.value = '';
-      currentAttachedFile = null;
-      uploadPlaceholder.classList.remove('hidden');
-      fileInfo.classList.add('hidden');
-      pageCountEl.value = 1;
-      calculateTotal();
-    }
-
-    function unlockAdmin() {
-      const inputUser = document.getElementById('admin-username').value.trim();
-      const inputPass = document.getElementById('admin-password').value.trim();
-
-      if (inputUser === adminUserStored && inputPass === adminPassStored) {
-        document.getElementById('admin-pin-gate').classList.add('hidden');
-        document.getElementById('admin-content').classList.remove('hidden');
-        renderAdminDashboard();
-      } else {
-        alert("Username atau Password Admin Salah!");
-      }
-    }
-
-    function markAsPaid(orderId) {
-      const order = orders.find(o => o.id === orderId);
-      if (order) {
-        order.paymentStatus = 'LUNAS';
-        localStorage.setItem('py_orders', JSON.stringify(orders));
-        renderAdminDashboard();
-        alert(`Pesanan ${orderId} telah dikonfirmasi LUNAS!`);
-      }
-    }
-
-    function isDateInFilter(dateString, filterType) {
-      const itemDate = new Date(dateString);
-      const now = new Date();
-
-      if (filterType === 'today') {
-        return itemDate.toDateString() === now.toDateString();
-      } else if (filterType === 'week') {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(now.getDate() - 7);
-        return itemDate >= sevenDaysAgo;
-      } else if (filterType === 'month') {
-        return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
-      } else if (filterType === 'year') {
-        return itemDate.getFullYear() === now.getFullYear();
-      }
-      return true;
-    }
-
-    function renderAdminDashboard() {
-      const filterType = document.getElementById('time-filter').value;
-
-      const filteredOrders = orders.filter(o => isDateInFilter(o.date, filterType));
-      const filteredExpenses = expenses.filter(e => isDateInFilter(e.date, filterType));
-
-      const paidOrders = filteredOrders.filter(o => o.paymentStatus === 'LUNAS');
-      const totalIncome = paidOrders.reduce((sum, o) => sum + o.totalPrice, 0);
-      const totalExpense = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
-      const profit = totalIncome - totalExpense;
-
-      document.getElementById('stat-income').textContent = formatRupiah(totalIncome);
-      document.getElementById('stat-expense').textContent = formatRupiah(totalExpense);
-      document.getElementById('stat-profit').textContent = formatRupiah(profit);
-
-      const orderTbody = document.getElementById('order-table-body');
-      orderTbody.innerHTML = '';
-
-      if (orders.length === 0) {
-        orderTbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Belum ada pesanan masuk</td></tr>`;
-      } else {
-        orders.forEach(o => {
-          let downloadBtn = `<span class="text-slate-400">Tanpa File</span>`;
-          if (o.file && o.file.dataUri) {
-            downloadBtn = `<a href="${o.file.dataUri}" download="${o.file.name}" class="bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 px-2.5 py-1.5 rounded-lg font-bold inline-flex items-center gap-1 text-xs">
-              <i data-lucide="download" class="w-3.5 h-3.5"></i> Unduh File
-            </a>`;
-          }
-
-          let isPaid = o.paymentStatus === 'LUNAS';
-          let statusBadge = isPaid 
-            ? `<span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">LUNAS</span>` 
-            : `<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">${o.paymentStatus}</span>`;
-
-          const textWA = `Halo ${o.custName}, pesanan cetak Anda (${o.paperName || 'Kertas'}, ${o.copyCount || 1} rangkap) di PrintYuk Tanjungpinang sedang diproses!`;
-          const urlWA = `https://wa.me/${(o.custPhone || '').replace(/^0/, '62')}?text=${encodeURIComponent(textWA)}`;
-
-          let actionBtn = isPaid
-            ? `<div class="flex items-center gap-2">
-                <span class="text-emerald-600 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Siap Cetak</span>
-                <a href="${urlWA}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1 rounded-lg font-bold text-xs inline-flex items-center gap-1">WA</a>
-               </div>`
-            : `<div class="flex items-center gap-1.5">
-                <button type="button" onclick="markAsPaid('${o.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-bold text-xs shadow-sm">
-                  Konfirmasi
-                </button>
-                <a href="${urlWA}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg font-bold text-xs">WA</a>
-               </div>`;
-
-          const paperDetails = o.paperName ? `
-            <div class="space-y-0.5 text-[11px] text-slate-700">
-              <p><strong class="text-slate-900">${o.paperName}</strong> (${o.colorName || 'B/W'})</p>
-              <p>Sisi: ${o.sidesName || '1 Sisi'} | Jilid: <span class="font-semibold text-brand-700">${o.bindingName || 'Tanpa Jilid'}</span></p>
-              <p>Jumlah: <strong>${o.pageCount || 1} hlm</strong> x <strong>${o.copyCount || 1} copy</strong> = <strong class="text-emerald-700">${o.totalSheets || 1} lembar</strong></p>
-              <p class="text-slate-500">Kurir: ${o.deliveryName || 'Ambil Toko'}</p>
-              ${o.notes && o.notes !== '-' ? `<p class="italic bg-amber-50 text-amber-800 p-1 rounded border border-amber-200 mt-1">" ${o.notes} "</p>` : ''}
-            </div>
-          ` : `<span class="text-slate-400 italic">Transaksi Manual/Walk-in</span>`;
-
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td class="p-3 font-bold text-slate-800">${o.id}<br><span class="text-[10px] text-slate-400 font-normal">${new Date(o.date).toLocaleDateString('id-ID')}</span></td>
-            <td class="p-3"><strong>${o.custName}</strong><br><span class="text-brand-600 font-mono">${o.custPhone}</span></td>
-            <td class="p-3 min-w-[220px]">${paperDetails}</td>
-            <td class="p-3">${downloadBtn}</td>
-            <td class="p-3"><strong>${formatRupiah(o.totalPrice)}</strong><br><span class="text-slate-400">${o.paymentMethod}</span></td>
-            <td class="p-3">${statusBadge}</td>
-            <td class="p-3">${actionBtn}</td>
-          `;
-          orderTbody.appendChild(tr);
-        });
-      }
-
-      const expTbody = document.getElementById('expense-table-body');
-      expTbody.innerHTML = '';
-      expenses.forEach(e => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="p-3">${new Date(e.date).toLocaleDateString('id-ID')}</td>
-          <td class="p-3"><span class="bg-slate-100 px-2 py-0.5 rounded">${e.category}</span></td>
-          <td class="p-3">${e.desc}</td>
-          <td class="p-3 font-bold text-red-600">${formatRupiah(e.amount)}</td>
-        `;
-        expTbody.appendChild(tr);
-      });
-
-      renderRealChart(filterType);
-      lucide.createIcons();
-    }
-
-    // FUNGSI DOWNLOAD LAPORAN EXCEL / CSV
-    function downloadFinancialReport() {
-      const filterType = document.getElementById('time-filter').value;
-      const filteredOrders = orders.filter(o => isDateInFilter(o.date, filterType));
-
-      if (filteredOrders.length === 0) {
-        alert("Belum ada data transaksi pada periode filter ini untuk diunduh!");
-        return;
-      }
-
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "ID Pesanan,Tanggal,Nama Pelanggan,No WhatsApp,Spesifikasi Kertas,Total Lembar,Metode Pembayaran,Total Biaya (Rp),Status Pembayaran\n";
-
-      filteredOrders.forEach(o => {
-        const row = [
-          `"${o.id}"`,
-          `"${new Date(o.date).toLocaleString('id-ID')}"`,
-          `"${o.custName}"`,
-          `"${o.custPhone}"`,
-          `"${o.paperName || '-'} (${o.bindingName || '-'})"`,
-          `"${o.totalSheets || 1}"`,
-          `"${o.paymentMethod}"`,
-          `"${o.totalPrice}"`,
-          `"${o.paymentStatus}"`
-        ];
-        csvContent += row.join(",") + "\n";
-      });
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Laporan_Pembukuan_PrintYuk_${filterType}_${Date.now()}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function renderRealChart(filterType) {
-      const ctx = document.getElementById('financialChart').getContext('2d');
-      if (myChart) myChart.destroy();
-
-      const labels = [];
-      const incomeData = [];
-      const expenseData = [];
-
-      let daysCount = 7;
-      if (filterType === 'today') daysCount = 1;
-      else if (filterType === 'month') daysCount = 30;
-
-      for (let i = daysCount - 1; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateStr = d.toLocaleDateString('id-ID');
-        labels.push(dateStr);
-
-        const dayIncome = orders
-          .filter(o => o.paymentStatus === 'LUNAS' && new Date(o.date).toLocaleDateString('id-ID') === dateStr)
-          .reduce((sum, o) => sum + o.totalPrice, 0);
-
-        const dayExpense = expenses
-          .filter(e => new Date(e.date).toLocaleDateString('id-ID') === dateStr)
-          .reduce((sum, e) => sum + e.amount, 0);
-
-        incomeData.push(dayIncome);
-        expenseData.push(dayExpense);
-      }
-
-      myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [
-            { label: 'Pemasukan Lunas', data: incomeData, backgroundColor: '#0284c7' },
-            { label: 'Pengeluaran', data: expenseData, backgroundColor: '#dc2626' }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-
-    function openManualOrderModal() { document.getElementById('manual-order-modal').classList.remove('hidden'); }
-    function closeManualOrderModal() { document.getElementById('manual-order-modal').classList.add('hidden'); }
-
-    function saveManualOrder() {
-      const custName = document.getElementById('manual-cust-name').value.trim() || 'Pelanggan Toko';
-      const desc = document.getElementById('manual-desc').value.trim() || 'Transaksi Cetak Toko';
-      const amount = parseFloat(document.getElementById('manual-amount').value) || 0;
-      const paymentMethod = document.getElementById('manual-payment-method').value;
-
-      if (amount <= 0) {
-        alert("Masukkan nominal pemasukan yang valid!");
-        return;
-      }
-
-      const manualOrder = {
-        id: 'OFF-' + Math.floor(1000 + Math.random() * 9000),
-        date: new Date().toISOString(),
-        custName: custName,
-        custPhone: 'Walk-in Toko',
-        paperName: desc,
-        colorName: 'Manual',
-        bindingName: '-',
-        deliveryName: 'Di Toko',
-        paymentMethod: paymentMethod,
-        pageCount: 1,
-        copyCount: 1,
-        totalSheets: 1,
-        totalPrice: amount,
-        paymentStatus: 'LUNAS',
-        file: null
-      };
-
-      orders.unshift(manualOrder);
-      localStorage.setItem('py_orders', JSON.stringify(orders));
-      closeManualOrderModal();
-      renderAdminDashboard();
-      alert("Pemasukan manual berhasil ditambahkan!");
-    }
-
-    function openSettingsModal() { 
-      document.getElementById('new-username').value = adminUserStored;
-      document.getElementById('new-password').value = adminPassStored;
-      document.getElementById('settings-modal').classList.remove('hidden'); 
-    }
-    function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
-
-    function changeAdminCredentials() {
-      const newU = document.getElementById('new-username').value.trim();
-      const newP = document.getElementById('new-password').value.trim();
-
-      if (!newU || !newP) {
-        alert("Username dan Password tidak boleh kosong!");
-        return;
-      }
-
-      adminUserStored = newU;
-      adminPassStored = newP;
-      localStorage.setItem('py_admin_user', newU);
-      localStorage.setItem('py_admin_pass', newP);
-      alert("Username & Password Admin berhasil diperbarui!");
-      closeSettingsModal();
-    }
-
-    function openExpenseModal() { document.getElementById('expense-modal').classList.remove('hidden'); }
-    function closeExpenseModal() { document.getElementById('expense-modal').classList.add('hidden'); }
-
-    function saveExpense() {
-      const category = document.getElementById('exp-category').value;
-      const desc = document.getElementById('exp-desc').value.trim();
-      const amount = parseFloat(document.getElementById('exp-amount').value) || 0;
-
-      if (!desc || amount <= 0) {
-        alert("Mohon isi deskripsi dan nominal pengeluaran!");
-        return;
-      }
-
-      expenses.unshift({ date: new Date().toISOString(), category, desc, amount });
-      localStorage.setItem('py_expenses', JSON.stringify(expenses));
-      closeExpenseModal();
-      renderAdminDashboard();
-    }
-
-    calculateTotal();
-  </script>
+  <!-- SCRIPT UTAMA PISAH -->
+  <script src="script.js"></script>
 </body>
 </html>
