@@ -13,6 +13,7 @@ try {
 var adminUserStored = localStorage.getItem('py_admin_user') || 'admin';
 var adminPassStored = localStorage.getItem('py_admin_pass') || 'admin123';
 var currentAttachedFile = null;
+var tempPendingOrder = null;
 var myChart = null;
 
 // Helper Format Rupiah
@@ -161,7 +162,7 @@ function autoFillTrack(orderId) {
   }
 }
 
-// PROSES PEMESANAN BARU
+// PROSES PEMESANAN BARU DENGAN ATURAN BAYAR DULU / COD
 function processOrder() {
   try {
     var custNameEl = document.getElementById('cust-name');
@@ -203,44 +204,116 @@ function processOrder() {
       notes: notesEl ? notesEl.value.trim() || '-' : '-',
       paymentMethod: chosenPayment,
       totalPrice: calc.grandTotal,
-      paymentStatus: (chosenPayment.indexOf('Direct') !== -1 ? 'Proses Konfirmasi' : 'Belum Lunas'),
+      paymentStatus: (chosenPayment.indexOf('Direct') !== -1 ? 'Proses Konfirmasi' : 'Belum Lunas (COD/Toko)'),
       processStatus: 'Menunggu Pembayaran',
       file: currentAttachedFile || { name: 'File disusulkan via WA', size: '0 MB', dataUri: '' }
     };
 
-    try {
-      orders = JSON.parse(localStorage.getItem('py_orders') || '[]');
-    } catch (e) { orders = []; }
+    // JIKA TRANSAKSI DIGITAL (QRIS / TRANSFER BANK), HARUS BAYAR DULU DI MODAL
+    if (chosenPayment.indexOf('Direct') !== -1 || chosenPayment.indexOf('QRIS') !== -1) {
+      tempPendingOrder = orderData;
+      
+      var modalAmount = document.getElementById('pay-modal-amount');
+      var modalDetails = document.getElementById('pay-modal-details');
+      var modal = document.getElementById('payment-modal');
 
-    orders.unshift(orderData);
-
-    try {
-      localStorage.setItem('py_orders', JSON.stringify(orders));
-    } catch (e) {
-      if (orders.length > 1) {
-        orders.pop();
-        try { localStorage.setItem('py_orders', JSON.stringify(orders)); } catch (err2) {}
+      if (modalAmount) modalAmount.textContent = formatRupiah(calc.grandTotal);
+      
+      if (modalDetails) {
+        if (chosenPayment.indexOf('BCA') !== -1) {
+          modalDetails.innerHTML = 
+            '<p class="text-slate-500">Bank Tujuan:</p><p class="font-bold text-slate-900">Bank BCA</p>' +
+            '<p class="text-slate-500 mt-2">Nomor Rekening:</p><p class="font-extrabold text-brand-600 text-sm">1234 5678 90</p>' +
+            '<p class="text-slate-500">Atas Nama: <strong>PrintYuk Tanjungpinang</strong></p>';
+        } else if (chosenPayment.indexOf('Mandiri') !== -1) {
+          modalDetails.innerHTML = 
+            '<p class="text-slate-500">Bank Tujuan:</p><p class="font-bold text-slate-900">Bank Mandiri</p>' +
+            '<p class="text-slate-500 mt-2">Nomor Rekening:</p><p class="font-extrabold text-brand-600 text-sm">0987 6543 21</p>' +
+            '<p class="text-slate-500">Atas Nama: <strong>PrintYuk Tanjungpinang</strong></p>';
+        } else {
+          modalDetails.innerHTML = 
+            '<div class="text-center py-2 space-y-2">' +
+            '<div class="bg-white p-3 inline-block rounded-xl border border-slate-300 shadow-inner">' +
+            '<i data-lucide="qr-code" class="w-28 h-28 mx-auto text-slate-800"></i>' +
+            '</div>' +
+            '<p class="font-bold text-slate-900">QRIS PrintYuk Tanjungpinang</p>' +
+            '<p class="text-[10px] text-slate-500">Scan via GoPay, ShopeePay, OVO, Dana, atau m-Banking</p>' +
+            '</div>';
+        }
       }
+
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+      if (modal) modal.classList.remove('hidden');
+
+    } else {
+      // JIKA COD ATAU BAYAR DI TOKO (LANGSUNG MASUK KE ADMIN & BUKA WA COD)
+      saveFinalOrder(orderData, false);
     }
-
-    saveOrderToClientHistory(orderData);
-
-    var textWA = 'Halo Admin PrintYuk! Saya buat pesanan baru:%0A' +
-                 '*ID Pesanan:* ' + orderData.id + '%0A' +
-                 '*Nama:* ' + encodeURIComponent(orderData.custName) + '%0A' +
-                 '*Total:* ' + encodeURIComponent(formatRupiah(orderData.totalPrice)) + '%0A' +
-                 '*Metode Pembayaran:* ' + encodeURIComponent(orderData.paymentMethod);
-
-    window.open('https://wa.me/6285658323189?text=' + textWA, '_blank');
-
-    alert('BERHASIL! Pesanan Anda telah dibuat.\nID Pesanan: ' + orderData.id);
-    
-    resetOrderForm();
 
   } catch (err) {
     alert("Terjadi kesalahan sistem!");
     console.error(err);
   }
+}
+
+function closePaymentModal() {
+  var modal = document.getElementById('payment-modal');
+  if (modal) modal.classList.add('hidden');
+  tempPendingOrder = null;
+}
+
+// KONFIRMASI SETELAH USER TEKAN "SAYA SUDAH BAYAR"
+function confirmPaymentDirect() {
+  if (tempPendingOrder) {
+    saveFinalOrder(tempPendingOrder, true);
+    closePaymentModal();
+  }
+}
+
+// SIMPAN PESANAN KE LOCALSTORAGE ADMIN & BUKA CHAT WA TEMPLATE
+function saveFinalOrder(orderData, isDigitalPaid) {
+  try {
+    orders = JSON.parse(localStorage.getItem('py_orders') || '[]');
+  } catch (e) { orders = []; }
+
+  orders.unshift(orderData);
+
+  try {
+    localStorage.setItem('py_orders', JSON.stringify(orders));
+  } catch (e) {
+    if (orders.length > 1) {
+      orders.pop();
+      try { localStorage.setItem('py_orders', JSON.stringify(orders)); } catch (err2) {}
+    }
+  }
+
+  saveOrderToClientHistory(orderData);
+
+  var textWA = '';
+
+  if (isDigitalPaid) {
+    // TEMPLATE CHAT WA SETELAH BAYAR DIGITAL (TRANSFER/QRIS)
+    textWA = 'Halo Admin PrintYuk! Saya sudah melakukan pembayaran.%0A%0A' +
+             '📌 *ID Pesanan:* ' + orderData.id + '%0A' +
+             '👤 *Nama:* ' + encodeURIComponent(orderData.custName) + '%0A' +
+             '💰 *Nominal Dibayar:* ' + encodeURIComponent(formatRupiah(orderData.totalPrice)) + '%0A' +
+             '💳 *Metode Pembayaran:* ' + encodeURIComponent(orderData.paymentMethod) + '%0A%0A' +
+             'Proses pembayaran sudah selesai dengan nominal sekian, mohon segera diproses ya Kak! Terimakasih.';
+  } else {
+    // TEMPLATE CHAT WA PEMBAYARAN COD / CASH DI TOKO
+    textWA = 'Halo Admin PrintYuk! Saya buat pesanan baru (Bayar di Tempat/COD).%0A%0A' +
+             '📌 *ID Pesanan:* ' + orderData.id + '%0A' +
+             '👤 *Nama:* ' + encodeURIComponent(orderData.custName) + '%0A' +
+             '💵 *Total Biaya:* ' + encodeURIComponent(formatRupiah(orderData.totalPrice)) + '%0A' +
+             '📌 *Metode Pembayaran:* ' + encodeURIComponent(orderData.paymentMethod) + '%0A' +
+             '🛵 *Opsi Pengiriman:* ' + encodeURIComponent(orderData.deliveryName) + '%0A%0A' +
+             'Sistem pembayaran lewat COD / Bayar di Tempat langsung saat berkas diambil/diantar. Mohon diproses Kak, Terima kasih!';
+  }
+
+  window.open('https://wa.me/6281234567890?text=' + textWA, '_blank');
+
+  alert('BERHASIL! Pesanan ' + orderData.id + ' telah dibuat dan masuk ke sistem Admin.');
+  resetOrderForm();
 }
 
 // FITUR LACAK PESANAN UNTUK KOSTUMER
@@ -330,7 +403,6 @@ function markAsPaid(orderId) {
   alert('Pesanan ' + orderId + ' berhasil ditandai LUNAS!');
 }
 
-// HELPER PEMBUAT TEMPLATE PESAN WA BERDASARKAN STATUS
 function generateWATemplate(order, customStatus) {
   var status = customStatus || order.processStatus;
   var phone = (order.custPhone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
@@ -362,7 +434,6 @@ function generateWATemplate(order, customStatus) {
   return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(textWA);
 }
 
-// FITUR ADMIN UNTUK MENGATUR STATUS PENGERJAAN/PENGIRIMAN DENGAN NOTIF WA
 function updateProcessStatus(orderId, newStatus) {
   var targetOrder = null;
   for (var i = 0; i < orders.length; i++) {
@@ -376,7 +447,6 @@ function updateProcessStatus(orderId, newStatus) {
   try { localStorage.setItem('py_orders', JSON.stringify(orders)); } catch (e) {}
   renderAdminDashboard();
 
-  // Buka WhatsApp Otomatis Sesuai Template Status Baru
   if (targetOrder) {
     var waUrl = generateWATemplate(targetOrder, newStatus);
     window.open(waUrl, '_blank');
