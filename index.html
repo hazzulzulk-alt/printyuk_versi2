@@ -103,7 +103,7 @@
           <div>
             <label class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-3">
               <span class="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs">1</span>
-              Upload File / Dokumen
+              Upload File / Dokumen Cetak
             </label>
             <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition-colors bg-slate-50 relative overflow-hidden">
               <div class="flex flex-col items-center gap-2 cursor-pointer relative" id="upload-placeholder">
@@ -300,33 +300,40 @@
     </main>
   </div>
 
-  <!-- MODAL PEMBAYARAN DIGITAL DIRECT -->
+  <!-- MODAL PEMBAYARAN DIGITAL & UPLOAD BUKTI TRANSFER -->
   <div id="payment-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl text-center relative">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl text-center relative max-h-[90vh] overflow-y-auto">
       <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto">
         <i data-lucide="qr-code" class="w-6 h-6"></i>
       </div>
       <div>
         <h3 class="font-bold text-lg text-slate-900" id="pay-modal-title">Selesaikan Pembayaran</h3>
-        <p class="text-xs text-slate-500 mt-1">Lakukan pembayaran agar pesanan dikirim ke Admin:</p>
+        <p class="text-xs text-slate-500 mt-1">Lakukan transfer dan lampirkan bukti bayar agar pesanan masuk ke Admin:</p>
       </div>
 
       <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-3">
         <div class="flex justify-between items-center text-xs pb-2 border-b border-slate-200">
-          <span class="text-slate-500">Nominal Transfer:</span>
+          <span class="text-slate-500">Total Pembayaran:</span>
           <span id="pay-modal-amount" class="font-extrabold text-brand-600 text-base">Rp 0</span>
         </div>
         <div id="pay-modal-details" class="text-xs space-y-2 text-slate-700"></div>
       </div>
 
+      <!-- FORM UPLOAD BUKTI BAYAR -->
+      <div class="text-left space-y-1">
+        <label class="block text-xs font-bold text-slate-800">Upload Bukti Transfer / QRIS <span class="text-red-500">*</span></label>
+        <input type="file" id="proof-input" accept="image/*" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-xs">
+        <p class="text-[10px] text-slate-400">Format: Foto/Screenshot (PNG, JPG, JPEG)</p>
+      </div>
+
       <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-800 text-left flex items-start gap-2">
         <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
-        <span>Klik <strong>"Saya Sudah Bayar"</strong> setelah transfer agar pesanan Anda masuk ke antrean cetak Admin.</span>
+        <span>Admin akan memverifikasi bukti bayar kamu. Setelah klik dikirim, status pesanan otomatis berubah jadi <strong>Menunggu Verifikasi</strong>.</span>
       </div>
 
       <div class="flex gap-2">
         <button type="button" onclick="closePaymentModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold text-xs">Batal</button>
-        <button type="button" onclick="confirmPaymentDirect()" class="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow-md">Saya Sudah Bayar</button>
+        <button type="button" onclick="confirmPaymentWithProof()" class="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow-md">Kirim Bukti & Pesan</button>
       </div>
     </div>
   </div>
@@ -355,7 +362,11 @@
           <label class="block text-xs font-bold text-slate-700 mb-1">Password Admin</label>
           <input type="password" id="admin-password" required class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
         </div>
-        <button type="submit" class="w-full bg-brand-600 text-white font-bold py-3 rounded-xl text-xs">Masuk Sekarang</button>
+        <button type="submit" class="w-full bg-brand-600 text-white font-bold py-3 rounded-xl text-xs shadow-md">Masuk Sekarang</button>
+        
+        <div class="text-center pt-2">
+          <button type="button" onclick="openForgotPasswordModal()" class="text-xs text-brand-600 font-semibold hover:underline">Lupa Password / Akses Terkunci?</button>
+        </div>
       </form>
     </div>
 
@@ -366,9 +377,10 @@
         </div>
         <div class="flex flex-wrap gap-2">
           <button type="button" onclick="downloadFinancialReport()" class="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-xs">Download Excel</button>
+          <button type="button" onclick="localStorage.clear(); alert('Semua data berhasil dibersihkan!'); location.reload();" class="bg-amber-600 text-white px-4 py-2 rounded-xl font-bold text-xs">Hapus Cache & Reset</button>
           <button type="button" onclick="openManualOrderModal()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl font-bold text-xs">Input Offline</button>
           <button type="button" onclick="openExpenseModal()" class="bg-red-50 text-red-700 px-4 py-2 rounded-xl font-bold text-xs">Catat Pengeluaran</button>
-          <button type="button" onclick="openSettingsModal()" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl font-bold text-xs">Akun Admin</button>
+          <button type="button" onclick="openSettingsModal()" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-xl font-bold text-xs">Keamanan Akun</button>
         </div>
       </div>
 
@@ -383,22 +395,22 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-brand-600 text-white p-6 rounded-2xl">
-          <p class="text-xs uppercase font-bold">Total Pemasukan</p>
+        <div class="bg-brand-600 text-white p-6 rounded-2xl shadow-sm">
+          <p class="text-xs uppercase font-bold">Total Pemasukan (Lunas)</p>
           <p id="stat-income" class="text-3xl font-extrabold">Rp 0</p>
         </div>
-        <div class="bg-red-600 text-white p-6 rounded-2xl">
+        <div class="bg-red-600 text-white p-6 rounded-2xl shadow-sm">
           <p class="text-xs uppercase font-bold">Total Pengeluaran</p>
           <p id="stat-expense" class="text-3xl font-extrabold">Rp 0</p>
         </div>
-        <div class="bg-emerald-600 text-white p-6 rounded-2xl">
+        <div class="bg-emerald-600 text-white p-6 rounded-2xl shadow-sm">
           <p class="text-xs uppercase font-bold">Laba Bersih</p>
           <p id="stat-profit" class="text-3xl font-extrabold">Rp 0</p>
         </div>
       </div>
 
       <div class="bg-white p-6 rounded-2xl border shadow-sm">
-        <h3 class="font-bold text-base mb-2">Grafik Pembukuan</h3>
+        <h3 class="font-bold text-base mb-2">Grafik Pembukuan Lunas</h3>
         <div class="h-64"><canvas id="financialChart"></canvas></div>
       </div>
 
@@ -411,10 +423,11 @@
                 <th class="p-3">ID / Waktu</th>
                 <th class="p-3">Pelanggan</th>
                 <th class="p-3">Spesifikasi</th>
-                <th class="p-3">File</th>
-                <th class="p-3">Total</th>
+                <th class="p-3">File Dokumen</th>
+                <th class="p-3">Bukti Transfer</th>
+                <th class="p-3">Total / Bayar</th>
                 <th class="p-3">Status Pengerjaan (Admin)</th>
-                <th class="p-3">Aksi</th>
+                <th class="p-3">Aksi Verifikasi</th>
               </tr>
             </thead>
             <tbody id="order-table-body" class="divide-y divide-slate-100"></tbody>
@@ -441,7 +454,60 @@
     </div>
   </div>
 
-  <!-- MODALS ADMIN -->
+  <!-- MODAL PEMULIHAN / LUPA PASSWORD -->
+  <div id="forgot-password-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
+      <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto">
+        <i data-lucide="key-round" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-lg text-slate-900">Pemulihan Akun Admin</h3>
+      <p class="text-xs text-slate-500">Gunakan Kunci Pemulihan Darurat (Master Key) atau Minta Bantuan via WA:</p>
+      
+      <div class="space-y-3 text-left">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 mb-1">Master Key Pemulihan</label>
+          <input type="password" id="master-key-input" placeholder="Masukkan Master Key..." class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs mb-2">
+          <button type="button" onclick="resetViaMasterKey()" class="w-full bg-brand-600 hover:bg-brand-700 text-white p-2.5 rounded-xl text-xs font-bold shadow-sm">Reset ke Password Default</button>
+        </div>
+
+        <div class="pt-2 border-t">
+          <button type="button" onclick="resetViaWA()" class="w-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 p-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            <span>Minta Bantuan Reset via WA Owner</span>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" onclick="document.getElementById('forgot-password-modal').classList.add('hidden')" class="text-xs text-slate-400 underline pt-2">Batal</button>
+    </div>
+  </div>
+
+  <!-- MODAL PENGATURAN AKUN DENGAN VERIFIKASI PASSWORD LAMA -->
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <h3 class="font-bold text-lg text-slate-900">Ubah Akun Login Admin</h3>
+      <p class="text-xs text-slate-500">Masukkan password saat ini untuk memverifikasi perubahan:</p>
+      
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Password Saat Ini (Password Lama) <span class="text-red-500">*</span></label>
+        <input type="password" id="old-password" placeholder="Password lama..." class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Username Baru</label>
+        <input type="text" id="new-username" placeholder="Username baru..." class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Password Baru</label>
+        <input type="password" id="new-password" placeholder="Password baru..." class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeSettingsModal()" class="w-1/2 bg-slate-100 py-2.5 rounded-xl font-bold text-xs">Batal</button>
+        <button type="button" onclick="changeAdminCredentials()" class="w-1/2 bg-brand-600 text-white py-2.5 rounded-xl font-bold text-xs shadow-md">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALS INPUT OFFLINE & PENGELUARAN -->
   <div id="manual-order-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4">
       <h3 class="font-bold text-lg">Input Transaksi Offline</h3>
@@ -455,18 +521,6 @@
       <div class="flex gap-2">
         <button type="button" onclick="closeManualOrderModal()" class="w-1/2 bg-slate-100 py-2 rounded-xl font-bold text-xs">Batal</button>
         <button type="button" onclick="saveManualOrder()" class="w-1/2 bg-emerald-600 text-white py-2 rounded-xl font-bold text-xs">Simpan</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4">
-      <h3 class="font-bold text-lg">Ganti Akun Admin</h3>
-      <input type="text" id="new-username" placeholder="Username Baru" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
-      <input type="password" id="new-password" placeholder="Password Baru" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
-      <div class="flex gap-2">
-        <button type="button" onclick="closeSettingsModal()" class="w-1/2 bg-slate-100 py-2 rounded-xl font-bold text-xs">Batal</button>
-        <button type="button" onclick="changeAdminCredentials()" class="w-1/2 bg-brand-600 text-white py-2 rounded-xl font-bold text-xs">Simpan</button>
       </div>
     </div>
   </div>
