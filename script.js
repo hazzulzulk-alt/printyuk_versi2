@@ -12,7 +12,10 @@ try {
 
 var adminUserStored = localStorage.getItem('py_admin_user') || 'admin';
 var adminPassStored = localStorage.getItem('py_admin_pass') || 'admin123';
+var MASTER_KEY = "PRINTYUK2026"; // Kunci Darurat Khusus Pemilik Toko
+
 var currentAttachedFile = null;
+var currentProofFile = null;
 var tempPendingOrder = null;
 var myChart = null;
 
@@ -44,6 +47,55 @@ function switchTab(type) {
     }
     renderAdminDashboard();
   }
+}
+
+// FITUR PEMULIHAN PASSWORD AMAN
+function openForgotPasswordModal() {
+  document.getElementById('forgot-password-modal').classList.remove('hidden');
+}
+
+function resetViaWA() {
+  var textWA = 'Halo Owner PrintYuk! Saya lupa kredensial login Admin Website. Mohon bantuan reset akun Admin saya.';
+  window.open('https://wa.me/6285658323189?text=' + encodeURIComponent(textWA), '_blank');
+}
+
+function resetViaMasterKey() {
+  var inputKey = document.getElementById('master-key-input').value.trim();
+  if (inputKey === MASTER_KEY) {
+    adminUserStored = 'admin';
+    adminPassStored = 'admin123';
+    localStorage.setItem('py_admin_user', adminUserStored);
+    localStorage.setItem('py_admin_pass', adminPassStored);
+    alert("Berhasil! Akun Admin telah di-reset ke Default.\nUsername: admin\nPassword: admin123");
+    document.getElementById('forgot-password-modal').classList.add('hidden');
+    document.getElementById('master-key-input').value = '';
+  } else {
+    alert("Master Key Pemulihan Salah!");
+  }
+}
+
+// GANTI ACCOUNT ADMIN DENGAN VERIFIKASI PASSWORD LAMA
+function changeAdminCredentials() {
+  var oldP = document.getElementById('old-password') ? document.getElementById('old-password').value.trim() : '';
+  var newU = document.getElementById('new-username').value.trim();
+  var newP = document.getElementById('new-password').value.trim();
+
+  if (oldP !== adminPassStored) {
+    alert("Gagal! Password saat ini (Password Lama) salah.");
+    return;
+  }
+
+  if (!newU || !newP) {
+    alert("Username dan Password baru tidak boleh kosong!");
+    return;
+  }
+
+  adminUserStored = newU;
+  adminPassStored = newP;
+  localStorage.setItem('py_admin_user', newU);
+  localStorage.setItem('py_admin_pass', newP);
+  alert("Akun Admin berhasil diperbarui dengan aman!");
+  closeSettingsModal();
 }
 
 // Kalkulasi Total Harga Cetak
@@ -162,7 +214,7 @@ function autoFillTrack(orderId) {
   }
 }
 
-// PROSES PEMESANAN BARU DENGAN ATURAN BAYAR DULU / COD
+// PROSES PEMESANAN BARU
 function processOrder() {
   try {
     var custNameEl = document.getElementById('cust-name');
@@ -204,12 +256,12 @@ function processOrder() {
       notes: notesEl ? notesEl.value.trim() || '-' : '-',
       paymentMethod: chosenPayment,
       totalPrice: calc.grandTotal,
-      paymentStatus: (chosenPayment.indexOf('Direct') !== -1 ? 'Proses Konfirmasi' : 'Belum Lunas (COD/Toko)'),
+      paymentStatus: (chosenPayment.indexOf('Direct') !== -1 || chosenPayment.indexOf('QRIS') !== -1 ? 'Menunggu Verifikasi' : 'Belum Lunas (COD/Toko)'),
       processStatus: 'Menunggu Pembayaran',
-      file: currentAttachedFile || { name: 'File disusulkan via WA', size: '0 MB', dataUri: '' }
+      file: currentAttachedFile || { name: 'File disusulkan via WA', size: '0 MB', dataUri: '' },
+      proofFile: null
     };
 
-    // JIKA TRANSAKSI DIGITAL (QRIS / TRANSFER BANK), HARUS BAYAR DULU DI MODAL
     if (chosenPayment.indexOf('Direct') !== -1 || chosenPayment.indexOf('QRIS') !== -1) {
       tempPendingOrder = orderData;
       
@@ -246,7 +298,6 @@ function processOrder() {
       if (modal) modal.classList.remove('hidden');
 
     } else {
-      // JIKA COD ATAU BAYAR DI TOKO (LANGSUNG MASUK KE ADMIN & BUKA WA COD)
       saveFinalOrder(orderData, false);
     }
 
@@ -259,19 +310,45 @@ function processOrder() {
 function closePaymentModal() {
   var modal = document.getElementById('payment-modal');
   if (modal) modal.classList.add('hidden');
+  var proofInput = document.getElementById('proof-input');
+  if (proofInput) proofInput.value = '';
+  currentProofFile = null;
   tempPendingOrder = null;
 }
 
-// KONFIRMASI SETELAH USER TEKAN "SAYA SUDAH BAYAR"
-function confirmPaymentDirect() {
-  if (tempPendingOrder) {
-    saveFinalOrder(tempPendingOrder, true);
-    closePaymentModal();
+// KONFIRMASI PEMBAYARAN & BACA FOTO BUKTI UNTUK DISIMPAN
+function confirmPaymentWithProof() {
+  var proofInput = document.getElementById('proof-input');
+  if (!proofInput || !proofInput.files || proofInput.files.length === 0) {
+    alert("Mohon upload foto bukti transfer terlebih dahulu!");
+    return;
   }
+
+  var file = proofInput.files[0];
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert("Ukuran foto bukti terlalu besar! Maksimal 2 MB.");
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = function(evt) {
+    if (tempPendingOrder) {
+      tempPendingOrder.proofFile = {
+        name: file.name,
+        dataUri: evt.target.result
+      };
+
+      saveFinalOrder(tempPendingOrder, true);
+      closePaymentModal();
+    }
+  };
+
+  reader.readAsDataURL(file);
 }
 
-// SIMPAN PESANAN KE LOCALSTORAGE ADMIN & BUKA CHAT WA TEMPLATE
-function saveFinalOrder(orderData, isDigitalPaid) {
+// SIMPAN PESANAN KE LOCALSTORAGE ADMIN & BUKA WA
+function saveFinalOrder(orderData, isDigitalWithProof) {
   try {
     orders = JSON.parse(localStorage.getItem('py_orders') || '[]');
   } catch (e) { orders = []; }
@@ -291,16 +368,15 @@ function saveFinalOrder(orderData, isDigitalPaid) {
 
   var textWA = '';
 
-  if (isDigitalPaid) {
-    // TEMPLATE CHAT WA SETELAH BAYAR DIGITAL (TRANSFER/QRIS)
-    textWA = 'Halo Admin PrintYuk! Saya sudah melakukan pembayaran.%0A%0A' +
+  if (isDigitalWithProof) {
+    textWA = 'Halo Admin PrintYuk! Saya sudah transfer dan melampirkan bukti pembayaran di website.%0A%0A' +
              '📌 *ID Pesanan:* ' + orderData.id + '%0A' +
              '👤 *Nama:* ' + encodeURIComponent(orderData.custName) + '%0A' +
-             '💰 *Nominal Dibayar:* ' + encodeURIComponent(formatRupiah(orderData.totalPrice)) + '%0A' +
-             '💳 *Metode Pembayaran:* ' + encodeURIComponent(orderData.paymentMethod) + '%0A%0A' +
-             'Proses pembayaran sudah selesai dengan nominal sekian, mohon segera diproses ya Kak! Terimakasih.';
+             '💰 *Total Dibayar:* ' + encodeURIComponent(formatRupiah(orderData.totalPrice)) + '%0A' +
+             '💳 *Metode:* ' + encodeURIComponent(orderData.paymentMethod) + '%0A' +
+             '🔍 *Status:* Menunggu Verifikasi Admin%0A%0A' +
+             'Mohon verifikasi mutasi dan segera diproses ya Kak! Terima kasih.';
   } else {
-    // TEMPLATE CHAT WA PEMBAYARAN COD / CASH DI TOKO
     textWA = 'Halo Admin PrintYuk! Saya buat pesanan baru (Bayar di Tempat/COD).%0A%0A' +
              '📌 *ID Pesanan:* ' + orderData.id + '%0A' +
              '👤 *Nama:* ' + encodeURIComponent(orderData.custName) + '%0A' +
@@ -310,7 +386,7 @@ function saveFinalOrder(orderData, isDigitalPaid) {
              'Sistem pembayaran lewat COD / Bayar di Tempat langsung saat berkas diambil/diantar. Mohon diproses Kak, Terima kasih!';
   }
 
-  window.open('https://wa.me/6281234567890?text=' + textWA, '_blank');
+  window.open('https://wa.me/6285658323189?text=' + textWA, '_blank');
 
   alert('BERHASIL! Pesanan ' + orderData.id + ' telah dibuat dan masuk ke sistem Admin.');
   resetOrderForm();
@@ -391,16 +467,63 @@ function unlockAdmin() {
   }
 }
 
+// 1. VERIFIKASI LUNAS DARI ADMIN (MENGUPDATE PEMASUKAN & GRAFIK + NOTIF WA)
 function markAsPaid(orderId) {
+  var targetOrder = null;
   for (var i = 0; i < orders.length; i++) {
     if (orders[i].id === orderId) {
       orders[i].paymentStatus = 'LUNAS';
+      targetOrder = orders[i];
       break;
     }
   }
+
+  // Simpan data terbaru ke localStorage
   try { localStorage.setItem('py_orders', JSON.stringify(orders)); } catch (e) {}
+
+  // Render ulang dashboard untuk update tabel, statistik, dan grafik
   renderAdminDashboard();
+
+  if (targetOrder) {
+    var phone = (targetOrder.custPhone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
+    var textWA = 'Halo Kak ' + targetOrder.custName + ',\n\n' +
+                 'Pembayaran Anda sebesar *' + formatRupiah(targetOrder.totalPrice) + '* untuk pesanan *ID: ' + targetOrder.id + '* telah *DIVERIFIKASI LUNAS* oleh Admin! 🎉\n\n' +
+                 'Pesanan cetak Anda langsung kami masukkan ke antrean pengerjaan. Terima kasih! 🙏';
+    
+    window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(textWA), '_blank');
+  }
+
   alert('Pesanan ' + orderId + ' berhasil ditandai LUNAS!');
+}
+
+// 2. VERIFIKASI BELUM LUNAS / SALDO BELUM MASUK (KIRIM WA NOTIFIKASI)
+function sendPaymentUnverifiedWA(orderId) {
+  var targetOrder = null;
+  for (var i = 0; i < orders.length; i++) {
+    if (orders[i].id === orderId) {
+      orders[i].paymentStatus = 'Belum Lunas (Saldo Belum Masuk)';
+      targetOrder = orders[i];
+      break;
+    }
+  }
+
+  // Simpan data terbaru ke localStorage
+  try { localStorage.setItem('py_orders', JSON.stringify(orders)); } catch (e) {}
+
+  // Render ulang dashboard
+  renderAdminDashboard();
+
+  if (targetOrder) {
+    var phone = (targetOrder.custPhone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
+    var textWA = 'Halo Kak ' + targetOrder.custName + ',\n\n' +
+                 'Terima kasih sudah memesan di PrintYuk Tanjungpinang.\n\n' +
+                 'Kami telah mengecek bukti transfer & mutasi rekening/QRIS kami untuk pesanan *ID: ' + targetOrder.id + '*, namun *PEMBAYARAN BELUM LUNAS / SALDO BELUM MASUK* sebesar *' + formatRupiah(targetOrder.totalPrice) + '*.\n\n' +
+                 'Mohon bantuannya untuk mengecek kembali transaksi di aplikasi bank/e-wallet Kakak ya. Pesanan akan segera kami cetak setelah saldo terverifikasi masuk. Terima kasih! 🙏';
+
+    window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(textWA), '_blank');
+  }
+
+  alert('Status pesanan ' + orderId + ' diubah menjadi Belum Lunas dan pesan peringatan WA telah dibuat.');
 }
 
 function generateWATemplate(order, customStatus) {
@@ -411,9 +534,9 @@ function generateWATemplate(order, customStatus) {
   if (status === 'Menunggu Pembayaran' || order.paymentStatus !== 'LUNAS') {
     textWA = 'Halo Kak ' + order.custName + ',\n\n' +
              'Pesanan Anda di *PrintYuk Tanjungpinang* dengan *ID: ' + order.id + '* telah kami terima.\n\n' +
-             '📌 *Status:* Menunggu Pembayaran\n' +
+             '📌 *Status Pembayaran:* ' + order.paymentStatus + '\n' +
              '💰 *Total Pembayaran:* ' + formatRupiah(order.totalPrice) + '\n\n' +
-             'Silakan selesaikan proses pembayaran terlebih dahulu agar pesanan cetak Anda dapat segera kami proses. Terima kasih! 🙏';
+             'Silakan konfirmasi jika sudah melakukan transaksi. Terima kasih! 🙏';
   } else if (status === 'Sedang Dicetak') {
     textWA = 'Halo Kak ' + order.custName + ',\n\n' +
              'Kabar baik! Pesanan cetak Anda di *PrintYuk Tanjungpinang* (*ID: ' + order.id + '*) *SEDANG DICETAK* 🖨️✨\n\n' +
@@ -517,9 +640,12 @@ function renderAdminDashboard() {
     if (isDateInFilter(expenses[j].date, filterType)) filteredExpenses.push(expenses[j]);
   }
 
+  // TOTAL PEMASUKAN HANYA MENGHITUNG TRANSAKSI DENGAN STATUS "LUNAS"
   var totalIncome = 0;
   for (var k = 0; k < filteredOrders.length; k++) {
-    if (filteredOrders[k].paymentStatus === 'LUNAS') totalIncome += filteredOrders[k].totalPrice;
+    if (filteredOrders[k].paymentStatus === 'LUNAS') {
+      totalIncome += filteredOrders[k].totalPrice;
+    }
   }
 
   var totalExpense = 0;
@@ -542,24 +668,34 @@ function renderAdminDashboard() {
     orderTbody.innerHTML = '';
 
     if (orders.length === 0) {
-      orderTbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Belum ada pesanan masuk</td></tr>';
+      orderTbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-slate-400">Belum ada pesanan masuk</td></tr>';
     } else {
       for (var m = 0; m < orders.length; m++) {
         var o = orders[m];
+        
+        // DOKUMEN CETAK
         var downloadBtn = '<span class="text-slate-400">Tanpa File</span>';
         if (o.file && o.file.dataUri) {
-          downloadBtn = '<a href="' + o.file.dataUri + '" download="' + o.file.name + '" class="bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 px-2.5 py-1.5 rounded-lg font-bold inline-flex items-center gap-1 text-xs">Unduh File</a>';
-        } else if (o.file && o.file.name) {
-          downloadBtn = '<span class="text-slate-500 font-medium text-[11px]">' + o.file.name + '</span>';
+          downloadBtn = '<a href="' + o.file.dataUri + '" download="' + o.file.name + '" class="bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 px-2 py-1 rounded-lg font-bold inline-flex items-center gap-1 text-[11px]">Unduh File</a>';
+        }
+
+        // BUKTI BAYAR
+        var proofBtn = '<span class="text-slate-400">COD / Cash</span>';
+        if (o.proofFile && o.proofFile.dataUri) {
+          proofBtn = '<a href="' + o.proofFile.dataUri + '" target="_blank" download="' + o.proofFile.name + '" class="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 px-2 py-1 rounded-lg font-bold inline-flex items-center gap-1 text-[11px]">Lihat Bukti</a>';
         }
 
         var isPaid = o.paymentStatus === 'LUNAS';
         var urlWA = generateWATemplate(o);
 
-        var actionBtn = '<div class="flex items-center gap-1.5">' +
-          '<button type="button" onclick="printReceipt(\'' + o.id + '\')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg font-bold text-xs inline-flex items-center gap-1 shadow-sm">Struk</button>' +
-          (!isPaid ? '<button type="button" onclick="markAsPaid(\'' + o.id + '\')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg font-bold text-xs">Lunas</button>' : '') +
-          '<a href="' + urlWA + '" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg font-bold text-xs">WA</a>' +
+        // TOMBOL AKSI TERMASUK VERIFIKASI LUNAS DAN BELUM MASUK
+        var actionBtn = '<div class="flex flex-col gap-1">' +
+          '<div class="flex items-center gap-1">' +
+            '<button type="button" onclick="printReceipt(\'' + o.id + '\')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg font-bold text-xs shadow-sm">Struk</button>' +
+            '<a href="' + urlWA + '" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg font-bold text-xs">WA</a>' +
+          '</div>' +
+          (!isPaid ? '<button type="button" onclick="markAsPaid(\'' + o.id + '\')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded-lg font-bold text-xs w-full text-center">✓ Verifikasi Lunas</button>' : '') +
+          (!isPaid ? '<button type="button" onclick="sendPaymentUnverifiedWA(\'' + o.id + '\')" class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-1 rounded-lg font-bold text-xs w-full text-center" title="Saldo belum masuk / SS palsu">✕ Belum Lunas</button>' : '') +
           '</div>';
 
         var paperDetails = o.paperName ? 
@@ -573,9 +709,10 @@ function renderAdminDashboard() {
         tr.innerHTML = 
           '<td class="p-3 font-bold text-slate-800">' + o.id + '<br><span class="text-[10px] text-slate-400 font-normal">' + new Date(o.date).toLocaleDateString('id-ID') + '</span></td>' +
           '<td class="p-3"><strong>' + o.custName + '</strong><br><span class="text-brand-600 font-mono">' + o.custPhone + '</span></td>' +
-          '<td class="p-3 min-w-[220px]">' + paperDetails + '</td>' +
+          '<td class="p-3 min-w-[200px]">' + paperDetails + '</td>' +
           '<td class="p-3">' + downloadBtn + '</td>' +
-          '<td class="p-3"><strong>' + formatRupiah(o.totalPrice) + '</strong><br><span class="text-slate-400">' + o.paymentMethod + '</span></td>' +
+          '<td class="p-3">' + proofBtn + '</td>' +
+          '<td class="p-3"><strong>' + formatRupiah(o.totalPrice) + '</strong><br><span class="px-1.5 py-0.5 rounded text-[10px] font-bold ' + (isPaid ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800') + '">' + o.paymentStatus + '</span></td>' +
           '<td class="p-3">' +
             '<select onchange="updateProcessStatus(\'' + o.id + '\', this.value)" class="bg-slate-50 border border-slate-300 rounded p-1 text-xs font-semibold">' +
               '<option value="Menunggu Pembayaran"' + (o.processStatus === 'Menunggu Pembayaran' ? ' selected' : '') + '>Menunggu Pembayaran</option>' +
@@ -635,6 +772,7 @@ function downloadFinancialReport() {
   document.body.removeChild(link);
 }
 
+// FUNGSI GRAFIK HANYA MENGHITUNG PENJUALAN YANG STATUSNYA "LUNAS"
 function renderRealChart(filterType) {
   var chartCanvas = document.getElementById('financialChart');
   if (!chartCanvas || typeof Chart === 'undefined') return;
@@ -658,6 +796,7 @@ function renderRealChart(filterType) {
 
     var dayIncome = 0;
     for (var j = 0; j < orders.length; j++) {
+      // HANYA TAMBAHKAN KE GRAFIK JIKA STATUSNYA SUDAH "LUNAS"
       if (orders[j].paymentStatus === 'LUNAS' && new Date(orders[j].date).toLocaleDateString('id-ID') === dateStr) {
         dayIncome += orders[j].totalPrice;
       }
@@ -717,7 +856,8 @@ function saveManualOrder() {
     totalPrice: amount,
     paymentStatus: 'LUNAS',
     processStatus: 'Selesai',
-    file: null
+    file: null,
+    proofFile: null
   };
 
   orders.unshift(manualOrder);
@@ -729,27 +869,11 @@ function saveManualOrder() {
 
 function openSettingsModal() { 
   document.getElementById('new-username').value = adminUserStored;
-  document.getElementById('new-password').value = adminPassStored;
+  if (document.getElementById('old-password')) document.getElementById('old-password').value = '';
+  if (document.getElementById('new-password')) document.getElementById('new-password').value = '';
   document.getElementById('settings-modal').classList.remove('hidden'); 
 }
 function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
-
-function changeAdminCredentials() {
-  var newU = document.getElementById('new-username').value.trim();
-  var newP = document.getElementById('new-password').value.trim();
-
-  if (!newU || !newP) {
-    alert("Username dan Password tidak boleh kosong!");
-    return;
-  }
-
-  adminUserStored = newU;
-  adminPassStored = newP;
-  localStorage.setItem('py_admin_user', newU);
-  localStorage.setItem('py_admin_pass', newP);
-  alert("Username & Password Admin berhasil diperbarui!");
-  closeSettingsModal();
-}
 
 function openExpenseModal() { document.getElementById('expense-modal').classList.remove('hidden'); }
 function closeExpenseModal() { document.getElementById('expense-modal').classList.add('hidden'); }
