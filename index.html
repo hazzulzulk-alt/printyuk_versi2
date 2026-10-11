@@ -325,20 +325,55 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- TAB 2: DASHBOARD ADMIN & PEMBUKUAN -->
+  <!-- TAB 2: DASHBOARD ADMIN & LOGIN VISUAL -->
   <!-- ========================================== -->
   <div id="admin-view" class="hidden max-w-6xl w-full mx-auto px-4 py-8 space-y-6">
-    <!-- PIN GATE AUTH -->
-    <div id="admin-pin-gate" class="max-w-md mx-auto my-12 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-center space-y-4">
-      <div class="w-16 h-16 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto">
-        <i data-lucide="shield-check" class="w-8 h-8"></i>
+    
+    <!-- LOGIN GATE VISUAL WITH BRANDING -->
+    <div id="admin-pin-gate" class="max-w-md mx-auto my-8 bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
+      <!-- HEADER VISUAL BRANDING -->
+      <div class="bg-gradient-to-r from-brand-600 to-brand-700 p-8 text-center text-white space-y-3 relative overflow-hidden">
+        <div class="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto border border-white/20 shadow-inner">
+          <i data-lucide="printer" class="w-10 h-10 text-white"></i>
+        </div>
+        <div>
+          <h2 class="text-2xl font-extrabold tracking-tight">PrintYuk!</h2>
+          <p class="text-xs text-brand-100 font-medium">System Portal Admin Tanjungpinang</p>
+        </div>
+        <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
       </div>
-      <h2 class="text-2xl font-bold text-slate-900">Akses Masuk Admin</h2>
-      <p class="text-xs text-slate-500">Masukkan PIN keamanan untuk kelola pesanan & pembukuan. (PIN Default: <span class="font-bold text-brand-600">1234</span>)</p>
-      <input type="password" id="admin-pin" placeholder="****" maxlength="8" class="w-full text-center text-2xl tracking-widest font-bold bg-slate-50 border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-brand-500 focus:outline-none">
-      <button type="button" onclick="unlockAdmin()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md transition-all">
-        Masuk Dashboard Admin
-      </button>
+
+      <!-- FORM USERNAME & PASSWORD -->
+      <form onsubmit="event.preventDefault(); unlockAdmin();" class="p-8 space-y-5">
+        <div class="text-center mb-2">
+          <h3 class="font-bold text-slate-800 text-base">Masuk ke Dashboard</h3>
+          <p class="text-xs text-slate-500">Gunakan akun admin resmi untuk mengelola pesanan.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Username Admin</label>
+          <div class="relative">
+            <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+            <input type="text" id="admin-username" placeholder="Masukkan username" required class="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-3 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">Password Admin</label>
+          <div class="relative">
+            <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+            <input type="password" id="admin-password" placeholder="••••••••" required class="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-3 text-xs font-semibold focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md transition-all text-xs flex items-center justify-center gap-2">
+          <i data-lucide="log-in" class="w-4 h-4"></i> Masuk Sekarang
+        </button>
+
+        <p class="text-[11px] text-slate-400 text-center pt-2">
+          Akun Default: User: <strong class="text-slate-700">admin</strong> | Pass: <strong class="text-slate-700">admin123</strong>
+        </p>
+      </form>
     </div>
 
     <!-- MAIN ADMIN DASHBOARD CONTENT -->
@@ -360,7 +395,7 @@
             <i data-lucide="minus-circle" class="w-4 h-4"></i> Catat Pengeluaran
           </button>
           <button type="button" onclick="openSettingsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all">
-            <i data-lucide="key" class="w-4 h-4"></i> PIN
+            <i data-lucide="key" class="w-4 h-4"></i> Akun Admin
           </button>
         </div>
       </div>
@@ -496,23 +531,23 @@
     </div>
   </div>
 
-  <!-- MODAL PENGATURAN GANTI PIN -->
+  <!-- MODAL PENGATURAN GANTI AKUN ADMIN -->
   <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-      <h3 class="font-bold text-lg text-slate-900">Pengaturan PIN Admin</h3>
+      <h3 class="font-bold text-lg text-slate-900">Ganti Username & Password Admin</h3>
       <div class="space-y-3 text-xs">
         <div>
-          <label class="block font-medium text-slate-600 mb-1">PIN Sekarang</label>
-          <input type="password" id="old-pin" placeholder="****" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+          <label class="block font-medium text-slate-600 mb-1">Username Baru</label>
+          <input type="text" id="new-username" placeholder="admin" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold">
         </div>
         <div>
-          <label class="block font-medium text-slate-600 mb-1">PIN Baru</label>
-          <input type="password" id="new-pin" placeholder="****" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5">
+          <label class="block font-medium text-slate-600 mb-1">Password Baru</label>
+          <input type="password" id="new-password" placeholder="admin123" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 font-semibold">
         </div>
       </div>
       <div class="flex gap-2 pt-2">
         <button type="button" onclick="closeSettingsModal()" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs">Batal</button>
-        <button type="button" onclick="changeAdminPin()" class="w-1/2 bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl font-bold text-xs">Simpan PIN Baru</button>
+        <button type="button" onclick="changeAdminCredentials()" class="w-1/2 bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-xl font-bold text-xs">Simpan Perubahan</button>
       </div>
     </div>
   </div>
@@ -561,7 +596,8 @@
 
     let orders = JSON.parse(localStorage.getItem('py_orders') || '[]');
     let expenses = JSON.parse(localStorage.getItem('py_expenses') || '[]');
-    let adminPinStored = localStorage.getItem('py_admin_pin') || '1234';
+    let adminUserStored = localStorage.getItem('py_admin_user') || 'admin';
+    let adminPassStored = localStorage.getItem('py_admin_pass') || 'admin123';
     let currentAttachedFile = null;
     let tempPendingOrder = null;
     let myChart = null;
@@ -801,13 +837,15 @@
     }
 
     function unlockAdmin() {
-      const pin = document.getElementById('admin-pin').value;
-      if (pin === adminPinStored) {
+      const inputUser = document.getElementById('admin-username').value.trim();
+      const inputPass = document.getElementById('admin-password').value.trim();
+
+      if (inputUser === adminUserStored && inputPass === adminPassStored) {
         document.getElementById('admin-pin-gate').classList.add('hidden');
         document.getElementById('admin-content').classList.remove('hidden');
         renderAdminDashboard();
       } else {
-        alert("PIN Admin Salah!");
+        alert("Username atau Password Admin Salah!");
       }
     }
 
@@ -1048,25 +1086,27 @@
       alert("Pemasukan manual berhasil ditambahkan!");
     }
 
-    function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); }
+    function openSettingsModal() { 
+      document.getElementById('new-username').value = adminUserStored;
+      document.getElementById('new-password').value = adminPassStored;
+      document.getElementById('settings-modal').classList.remove('hidden'); 
+    }
     function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
 
-    function changeAdminPin() {
-      const oldPin = document.getElementById('old-pin').value;
-      const newPin = document.getElementById('new-pin').value.trim();
+    function changeAdminCredentials() {
+      const newU = document.getElementById('new-username').value.trim();
+      const newP = document.getElementById('new-password').value.trim();
 
-      if (oldPin !== adminPinStored) {
-        alert("PIN lama Anda salah!");
-        return;
-      }
-      if (!newPin || newPin.length < 4) {
-        alert("PIN baru minimal 4 karakter!");
+      if (!newU || !newP) {
+        alert("Username dan Password tidak boleh kosong!");
         return;
       }
 
-      adminPinStored = newPin;
-      localStorage.setItem('py_admin_pin', newPin);
-      alert("PIN Admin berhasil diubah!");
+      adminUserStored = newU;
+      adminPassStored = newP;
+      localStorage.setItem('py_admin_user', newU);
+      localStorage.setItem('py_admin_pass', newP);
+      alert("Username & Password Admin berhasil diperbarui!");
       closeSettingsModal();
     }
 
