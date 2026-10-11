@@ -330,17 +330,57 @@ function markAsPaid(orderId) {
   alert('Pesanan ' + orderId + ' berhasil ditandai LUNAS!');
 }
 
-// FITUR ADMIN UNTUK MENGATUR STATUS PENGERJAAN/PENGIRIMAN
+// HELPER PEMBUAT TEMPLATE PESAN WA BERDASARKAN STATUS
+function generateWATemplate(order, customStatus) {
+  var status = customStatus || order.processStatus;
+  var phone = (order.custPhone || '').replace(/^0/, '62').replace(/[^0-9]/g, '');
+  var textWA = '';
+
+  if (status === 'Menunggu Pembayaran' || order.paymentStatus !== 'LUNAS') {
+    textWA = 'Halo Kak ' + order.custName + ',\n\n' +
+             'Pesanan Anda di *PrintYuk Tanjungpinang* dengan *ID: ' + order.id + '* telah kami terima.\n\n' +
+             '📌 *Status:* Menunggu Pembayaran\n' +
+             '💰 *Total Pembayaran:* ' + formatRupiah(order.totalPrice) + '\n\n' +
+             'Silakan selesaikan proses pembayaran terlebih dahulu agar pesanan cetak Anda dapat segera kami proses. Terima kasih! 🙏';
+  } else if (status === 'Sedang Dicetak') {
+    textWA = 'Halo Kak ' + order.custName + ',\n\n' +
+             'Kabar baik! Pesanan cetak Anda di *PrintYuk Tanjungpinang* (*ID: ' + order.id + '*) *SEDANG DICETAK* 🖨️✨\n\n' +
+             'Mohon tunggu sebentar ya, kami sedang memproses dokumen Anda dengan kualitas terbaik.';
+  } else if (status === 'Siap Diantar / Diambil') {
+    textWA = 'Halo Kak ' + order.custName + ',\n\n' +
+             'Pesanan Anda di *PrintYuk Tanjungpinang* (*ID: ' + order.id + '*) *SUDAH SELESAI* dan siap diantar/diambil! 🎉📦\n\n' +
+             'Opsi Pengiriman: *' + order.deliveryName + '*\n' +
+             'Silakan konfirmasi jika ingin diambil atau diantar sekarang. Terima kasih!';
+  } else if (status === 'Selesai') {
+    textWA = 'Halo Kak ' + order.custName + ',\n\n' +
+             'Pesanan *' + order.id + '* telah *SELESAI*. Terima kasih telah mencetak dokumen di *PrintYuk Tanjungpinang*! 🙏😊\n\n' +
+             'Jangan ragu untuk cetak berkas/tugas kamu lagi di sini ya!';
+  } else {
+    textWA = 'Halo Kak ' + order.custName + ', mengenai pesanan Anda (*ID: ' + order.id + '*) di PrintYuk Tanjungpinang.';
+  }
+
+  return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(textWA);
+}
+
+// FITUR ADMIN UNTUK MENGATUR STATUS PENGERJAAN/PENGIRIMAN DENGAN NOTIF WA
 function updateProcessStatus(orderId, newStatus) {
+  var targetOrder = null;
   for (var i = 0; i < orders.length; i++) {
     if (orders[i].id === orderId) {
       orders[i].processStatus = newStatus;
       if (newStatus === 'Selesai') orders[i].paymentStatus = 'LUNAS';
+      targetOrder = orders[i];
       break;
     }
   }
   try { localStorage.setItem('py_orders', JSON.stringify(orders)); } catch (e) {}
   renderAdminDashboard();
+
+  // Buka WhatsApp Otomatis Sesuai Template Status Baru
+  if (targetOrder) {
+    var waUrl = generateWATemplate(targetOrder, newStatus);
+    window.open(waUrl, '_blank');
+  }
 }
 
 function printReceipt(orderId) {
@@ -444,8 +484,7 @@ function renderAdminDashboard() {
         }
 
         var isPaid = o.paymentStatus === 'LUNAS';
-        var textWA = 'Halo ' + o.custName + ', pesanan cetak Anda (' + (o.paperName || 'Kertas') + ') di PrintYuk Tanjungpinang sedang diproses!';
-        var urlWA = 'https://wa.me/' + (o.custPhone || '').replace(/^0/, '62') + '?text=' + encodeURIComponent(textWA);
+        var urlWA = generateWATemplate(o);
 
         var actionBtn = '<div class="flex items-center gap-1.5">' +
           '<button type="button" onclick="printReceipt(\'' + o.id + '\')" class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded-lg font-bold text-xs inline-flex items-center gap-1 shadow-sm">Struk</button>' +
