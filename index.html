@@ -349,14 +349,18 @@
           <p class="text-xs text-slate-500">Verifikasi pembayaran, proses cetak, dan kelola keuangan toko.</p>
         </div>
         <div class="flex flex-wrap gap-2">
+          <!-- TOMBOL DOWNLOAD EXCEL LOKAL -->
+          <button type="button" onclick="downloadFinancialReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm">
+            <i data-lucide="download-cloud" class="w-4 h-4"></i> Download Laporan Excel
+          </button>
           <button type="button" onclick="openManualOrderModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm">
-            <i data-lucide="plus-square" class="w-4 h-4"></i> Input Transaksi Offline
+            <i data-lucide="plus-square" class="w-4 h-4"></i> Input Offline
           </button>
           <button type="button" onclick="openExpenseModal()" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all">
             <i data-lucide="minus-circle" class="w-4 h-4"></i> Catat Pengeluaran
           </button>
           <button type="button" onclick="openSettingsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all">
-            <i data-lucide="key" class="w-4 h-4"></i> Pengaturan PIN
+            <i data-lucide="key" class="w-4 h-4"></i> PIN
           </button>
         </div>
       </div>
@@ -923,6 +927,43 @@
 
       renderRealChart(filterType);
       lucide.createIcons();
+    }
+
+    // FUNGSI DOWNLOAD LAPORAN EXCEL / CSV
+    function downloadFinancialReport() {
+      const filterType = document.getElementById('time-filter').value;
+      const filteredOrders = orders.filter(o => isDateInFilter(o.date, filterType));
+
+      if (filteredOrders.length === 0) {
+        alert("Belum ada data transaksi pada periode filter ini untuk diunduh!");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "ID Pesanan,Tanggal,Nama Pelanggan,No WhatsApp,Spesifikasi Kertas,Total Lembar,Metode Pembayaran,Total Biaya (Rp),Status Pembayaran\n";
+
+      filteredOrders.forEach(o => {
+        const row = [
+          `"${o.id}"`,
+          `"${new Date(o.date).toLocaleString('id-ID')}"`,
+          `"${o.custName}"`,
+          `"${o.custPhone}"`,
+          `"${o.paperName || '-'} (${o.bindingName || '-'})"`,
+          `"${o.totalSheets || 1}"`,
+          `"${o.paymentMethod}"`,
+          `"${o.totalPrice}"`,
+          `"${o.paymentStatus}"`
+        ];
+        csvContent += row.join(",") + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Laporan_Pembukuan_PrintYuk_${filterType}_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     function renderRealChart(filterType) {
