@@ -420,6 +420,7 @@
               <tr>
                 <th class="p-3">ID / Waktu</th>
                 <th class="p-3">Pelanggan</th>
+                <th class="p-3">Rincian & Spesifikasi Cetak</th>
                 <th class="p-3">File Dokumen</th>
                 <th class="p-3">Total Biaya</th>
                 <th class="p-3">Status Verifikasi</th>
@@ -708,8 +709,13 @@
         custPhone: custPhone,
         paperName: paperTypeEl.options[paperTypeEl.selectedIndex].text,
         colorName: printColorEl.options[printColorEl.selectedIndex].text,
+        sidesName: printSidesEl.options[printSidesEl.selectedIndex].text,
         bindingName: bindingTypeEl.options[bindingTypeEl.selectedIndex].text,
         deliveryName: deliveryOptionEl.options[deliveryOptionEl.selectedIndex].text,
+        pageCount: pageCountEl.value,
+        copyCount: copyCountEl.value,
+        totalSheets: calc.totalSheets,
+        notes: notesEl.value.trim() || '-',
         paymentMethod: chosenPayment,
         totalPrice: calc.grandTotal,
         paymentStatus: 'Belum Lunas',
@@ -848,13 +854,13 @@
       orderTbody.innerHTML = '';
 
       if (orders.length === 0) {
-        orderTbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada pesanan masuk</td></tr>`;
+        orderTbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Belum ada pesanan masuk</td></tr>`;
       } else {
         orders.forEach(o => {
           let downloadBtn = `<span class="text-slate-400">Tanpa File</span>`;
           if (o.file && o.file.dataUri) {
-            downloadBtn = `<a href="${o.file.dataUri}" download="${o.file.name}" class="bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 px-2 py-1 rounded-lg font-bold inline-flex items-center gap-1">
-              <i data-lucide="download" class="w-3 h-3"></i> Download File
+            downloadBtn = `<a href="${o.file.dataUri}" download="${o.file.name}" class="bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 px-2.5 py-1.5 rounded-lg font-bold inline-flex items-center gap-1 text-xs">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Unduh File
             </a>`;
           }
 
@@ -863,16 +869,36 @@
             ? `<span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">LUNAS</span>` 
             : `<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">${o.paymentStatus}</span>`;
 
+          const textWA = `Halo ${o.custName}, pesanan cetak Anda (${o.paperName || 'Kertas'}, ${o.copyCount || 1} rangkap) di PrintYuk Tanjungpinang sedang diproses!`;
+          const urlWA = `https://wa.me/${(o.custPhone || '').replace(/^0/, '62')}?text=${encodeURIComponent(textWA)}`;
+
           let actionBtn = isPaid
-            ? `<span class="text-emerald-600 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Siap Cetak</span>`
-            : `<button type="button" onclick="markAsPaid('${o.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg font-bold text-xs shadow-sm">
-                Konfirmasi Lunas
-              </button>`;
+            ? `<div class="flex items-center gap-2">
+                <span class="text-emerald-600 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Siap Cetak</span>
+                <a href="${urlWA}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1 rounded-lg font-bold text-xs inline-flex items-center gap-1">WA</a>
+               </div>`
+            : `<div class="flex items-center gap-1.5">
+                <button type="button" onclick="markAsPaid('${o.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-bold text-xs shadow-sm">
+                  Konfirmasi
+                </button>
+                <a href="${urlWA}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg font-bold text-xs">WA</a>
+               </div>`;
+
+          const paperDetails = o.paperName ? `
+            <div class="space-y-0.5 text-[11px] text-slate-700">
+              <p><strong class="text-slate-900">${o.paperName}</strong> (${o.colorName || 'B/W'})</p>
+              <p>Sisi: ${o.sidesName || '1 Sisi'} | Jilid: <span class="font-semibold text-brand-700">${o.bindingName || 'Tanpa Jilid'}</span></p>
+              <p>Jumlah: <strong>${o.pageCount || 1} hlm</strong> x <strong>${o.copyCount || 1} copy</strong> = <strong class="text-emerald-700">${o.totalSheets || 1} lembar</strong></p>
+              <p class="text-slate-500">Kurir: ${o.deliveryName || 'Ambil Toko'}</p>
+              ${o.notes && o.notes !== '-' ? `<p class="italic bg-amber-50 text-amber-800 p-1 rounded border border-amber-200 mt-1">" ${o.notes} "</p>` : ''}
+            </div>
+          ` : `<span class="text-slate-400 italic">Transaksi Manual/Walk-in</span>`;
 
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td class="p-3 font-bold text-slate-800">${o.id}<br><span class="text-[10px] text-slate-400 font-normal">${new Date(o.date).toLocaleDateString('id-ID')}</span></td>
-            <td class="p-3"><strong>${o.custName}</strong><br><span class="text-slate-400">${o.custPhone}</span></td>
+            <td class="p-3"><strong>${o.custName}</strong><br><span class="text-brand-600 font-mono">${o.custPhone}</span></td>
+            <td class="p-3 min-w-[220px]">${paperDetails}</td>
             <td class="p-3">${downloadBtn}</td>
             <td class="p-3"><strong>${formatRupiah(o.totalPrice)}</strong><br><span class="text-slate-400">${o.paymentMethod}</span></td>
             <td class="p-3">${statusBadge}</td>
@@ -966,8 +992,8 @@
         bindingName: '-',
         deliveryName: 'Di Toko',
         paymentMethod: paymentMethod,
-        pages: 1,
-        copies: 1,
+        pageCount: 1,
+        copyCount: 1,
         totalSheets: 1,
         totalPrice: amount,
         paymentStatus: 'LUNAS',
