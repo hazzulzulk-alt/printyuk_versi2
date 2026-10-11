@@ -10,14 +10,17 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- PDF.JS LIBRARY (Untuk Otomatis Hitung Jumlah Halaman PDF) -->
+  <!-- PDF.JS LIBRARY -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
   </script>
 
-  <!-- CHART.JS LIBRARY (Untuk Grafik Keuangan Admin Real Data) -->
+  <!-- CHART.JS LIBRARY -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- MIDTRANS SNAP SDK (PRODUCTION MODE) -->
+  <script src="https://app.midtrans.com/snap/snap.js" data-client-key="Mid-client-RlbB40_AG5BiZoNq"></script>
 
   <script>
     tailwind.config = {
@@ -30,10 +33,6 @@
               500: '#0284c7',
               600: '#0369a1',
               700: '#075985',
-            },
-            accent: {
-              500: '#14b8a6',
-              600: '#0d9488',
             }
           }
         }
@@ -56,7 +55,7 @@
         </div>
       </div>
       
-      <!-- NAV TABS BETWEEN CLIENT & ADMIN -->
+      <!-- NAV TABS -->
       <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
         <button id="tab-client-btn" onclick="switchTab('client')" class="px-4 py-2 rounded-lg font-bold text-xs md:text-sm bg-white text-brand-600 shadow-sm transition-all flex items-center gap-1.5">
           <i data-lucide="shopping-cart" class="w-4 h-4"></i>
@@ -74,8 +73,6 @@
   <!-- TAB 1: PORTAL PEMESANAN PELANGGAN -->
   <!-- ========================================== -->
   <div id="client-view" class="space-y-0">
-    
-    <!-- Hero Section -->
     <section class="bg-gradient-to-b from-brand-50 to-slate-50 py-12 md:py-16 border-b border-slate-200">
       <div class="max-w-6xl mx-auto px-4 text-center space-y-4">
         <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-semibold bg-brand-100 text-brand-700">
@@ -85,17 +82,13 @@
           Ngeprint Tugas & Berkas Tanpa <span class="text-brand-600">Perlu Antri!</span>
         </h1>
         <p class="max-w-2xl mx-auto text-slate-600 text-sm md:text-base">
-          Khusus Mahasiswa (UMRAH, STIE, Poltekkes) & Pekerja Kantoran Tanjungpinang. Upload file, pilih metode pembayaran (Otomatis/COD), lalu berkas diproses & diantar!
+          Selesaikan transaksi langsung di website via QRIS/Transfer Bank atau bayar COD saat berkas diantar!
         </p>
       </div>
     </section>
 
-    <!-- Main Content: Form & Kalkulator -->
     <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-12 gap-8" id="order-form">
-      
-      <!-- Form & Kalkulator (Kiri) -->
       <div class="lg:col-span-7 space-y-6">
-        
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
           
           <!-- Step 1: Upload File -->
@@ -104,8 +97,7 @@
               <span class="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs">1</span>
               Upload File / Dokumen
             </label>
-            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition-colors bg-slate-50 relative" id="drop-zone">
-              
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-brand-500 transition-colors bg-slate-50 relative">
               <div class="flex flex-col items-center gap-2 cursor-pointer relative" id="upload-placeholder">
                 <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.png">
                 <i data-lucide="upload-cloud" class="w-10 h-10 text-brand-500"></i>
@@ -125,11 +117,10 @@
                   <i data-lucide="x" class="w-5 h-5 pointer-events-none"></i>
                 </button>
               </div>
-
             </div>
           </div>
 
-          <!-- Step 2: Identitas Pemesan -->
+          <!-- Step 2: Data Pemesan -->
           <div>
             <label class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-3">
               <span class="w-6 h-6 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center text-xs">2</span>
@@ -223,16 +214,16 @@
               </div>
 
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Pilih Metode Pembayaran</label>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Metode Pembayaran</label>
                 <select id="payment-method" class="w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold text-slate-800">
-                  <optgroup label="── Pembayaran Digital (Otomatis Lunas) ──">
-                    <option value="QRIS Auto">QRIS Instan (GoPay, ShopeePay, OVO, Dana, LinkAja, m-Banking)</option>
-                    <option value="Transfer BCA Auto">Virtual Account BCA (Verifikasi Otomatis)</option>
-                    <option value="Transfer Mandiri Auto">Virtual Account Mandiri (Verifikasi Otomatis)</option>
+                  <optgroup label="── Pembayaran Digital Direct ──">
+                    <option value="QRIS Direct">QRIS All Payment (GoPay/ShopeePay/OVO/Dana/m-Banking)</option>
+                    <option value="Transfer BCA Direct">Transfer Bank BCA (Konfirmasi Direct Web)</option>
+                    <option value="Transfer Mandiri Direct">Transfer Bank Mandiri (Konfirmasi Direct Web)</option>
                   </optgroup>
-                  <optgroup label="── Bayar Manual di Tempat (COD / Cash) ──">
-                    <option value="COD Kampus">COD (Bayar Tunai / Cash saat Kurir Tiba di Kampus/Kos)</option>
-                    <option value="Bayar di Toko">Bayar Tunai di Toko (Saat Ambil Berkas)</option>
+                  <optgroup label="── Bayar Manual di Tempat ──">
+                    <option value="COD Kampus">COD (Bayar Cash ke Kurir saat Berkas Tiba)</option>
+                    <option value="Bayar di Toko">Bayar Cash di Toko (Saat Ambil Berkas)</option>
                   </optgroup>
                 </select>
               </div>
@@ -285,26 +276,58 @@
             </div>
           </div>
 
-          <button type="button" id="btn-whatsapp" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-            <i data-lucide="send" class="w-5 h-5"></i>
-            <span>Kirim Pesanan & Bayar</span>
+          <button type="button" onclick="processOrder()" class="w-full mt-6 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+            <i data-lucide="credit-card" class="w-5 h-5"></i>
+            <span>Bayar & Proses Pesanan</span>
           </button>
 
-          <p class="text-xs text-center text-amber-600 font-medium mt-3 bg-amber-50 p-2 rounded-lg border border-amber-200">
-            💡 <strong>Catatan:</strong> Pembayaran Digital akan terverifikasi <strong>LUNAS Otomatis</strong>. Untuk opsi <strong>COD/Tunai</strong>, Admin akan mengonfirmasi pelunasan saat uang diterima.
+          <p class="text-xs text-center text-slate-500 mt-3">
+            🔒 Transaksi aman & terkunci. Berkas diproses setelah pembayaran terverifikasi.
           </p>
         </div>
       </div>
-
     </main>
+  </div>
 
+  <!-- ========================================== -->
+  <!-- MODAL PEMBAYARAN DIRECT WEBSITE -->
+  <!-- ========================================== -->
+  <div id="payment-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl text-center relative">
+      <div class="w-12 h-12 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto">
+        <i data-lucide="qr-code" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h3 class="font-bold text-lg text-slate-900" id="pay-modal-title">Selesaikan Pembayaran</h3>
+        <p class="text-xs text-slate-500 mt-1" id="pay-modal-subtitle">Silakan scan QRIS atau transfer ke rekening resmi berikut:</p>
+      </div>
+
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left space-y-3">
+        <div class="flex justify-between items-center text-xs pb-2 border-b border-slate-200">
+          <span class="text-slate-500">Nominal Transfer:</span>
+          <span id="pay-modal-amount" class="font-extrabold text-brand-600 text-base">Rp 0</span>
+        </div>
+        <div id="pay-modal-details" class="text-xs space-y-2 text-slate-700">
+          <!-- Dynamic Content -->
+        </div>
+      </div>
+
+      <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-[11px] text-amber-800 text-left flex items-start gap-2">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+        <span>Setelah mentransfer, klik <strong>"Saya Sudah Bayar"</strong> agar transaksi terkunci ke sistem Admin.</span>
+      </div>
+
+      <div class="flex gap-2">
+        <button type="button" onclick="closePaymentModal()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold text-xs">Batal</button>
+        <button type="button" onclick="confirmPaymentDirect()" class="w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold text-xs shadow-md">Saya Sudah Bayar</button>
+      </div>
+    </div>
   </div>
 
   <!-- ========================================== -->
   <!-- TAB 2: DASHBOARD ADMIN & PEMBUKUAN -->
   <!-- ========================================== -->
   <div id="admin-view" class="hidden max-w-6xl w-full mx-auto px-4 py-8 space-y-6">
-    
     <!-- PIN GATE AUTH -->
     <div id="admin-pin-gate" class="max-w-md mx-auto my-12 bg-white p-8 rounded-3xl border border-slate-200 shadow-xl text-center space-y-4">
       <div class="w-16 h-16 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto">
@@ -320,12 +343,10 @@
 
     <!-- MAIN ADMIN DASHBOARD CONTENT -->
     <div id="admin-content" class="hidden space-y-6">
-      
-      <!-- HEADER METRICS & ACTIONS -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
           <h2 class="text-xl font-bold text-slate-900">Dashboard Manajemen & Pembukuan</h2>
-          <p class="text-xs text-slate-500">Verifikasi pembayaran, kelola pesanan offline, dan pantau keuangan toko.</p>
+          <p class="text-xs text-slate-500">Verifikasi pembayaran, proses cetak, dan kelola keuangan toko.</p>
         </div>
         <div class="flex flex-wrap gap-2">
           <button type="button" onclick="openManualOrderModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm">
@@ -340,7 +361,7 @@
         </div>
       </div>
 
-      <!-- FILTER RENTANG WAKTU LOKAL (HARI, MINGGU, BULAN, TAHUN) -->
+      <!-- FILTER RENTANG WAKTU LOKAL -->
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div class="flex items-center gap-2">
           <i data-lucide="filter" class="w-4 h-4 text-brand-600"></i>
@@ -355,18 +376,18 @@
         </select>
       </div>
 
-      <!-- METRIK KEUANGAN REAL DATA CARDS -->
+      <!-- METRIK KEUANGAN CARDS -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-gradient-to-br from-brand-600 to-brand-700 text-white p-6 rounded-2xl shadow-sm space-y-1">
           <p class="text-xs uppercase font-bold text-brand-100">Total Pemasukan (Lunas)</p>
           <p id="stat-income" class="text-3xl font-extrabold">Rp 0</p>
-          <p id="stat-income-sub" class="text-xs text-brand-200">Berdasarkan periode filter</p>
+          <p class="text-xs text-brand-200">Berdasarkan periode filter</p>
         </div>
 
         <div class="bg-gradient-to-br from-red-600 to-red-700 text-white p-6 rounded-2xl shadow-sm space-y-1">
           <p class="text-xs uppercase font-bold text-red-100">Total Pengeluaran Real</p>
           <p id="stat-expense" class="text-3xl font-extrabold">Rp 0</p>
-          <p id="stat-expense-sub" class="text-xs text-red-200">Catatan operasional toko</p>
+          <p class="text-xs text-red-200">Catatan operasional toko</p>
         </div>
 
         <div class="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-6 rounded-2xl shadow-sm space-y-1">
@@ -387,11 +408,11 @@
         </div>
       </div>
 
-      <!-- TABEL PESANAN MASUK & VERIFIKASI BAYAR -->
+      <!-- TABEL PESANAN MASUK -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
           <i data-lucide="file-check" class="w-5 h-5 text-brand-600"></i>
-          Daftar Pesanan & Status Pembayaran
+          Daftar Pesanan Terverifikasi (Siap Cetak)
         </h3>
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-left">
@@ -399,9 +420,9 @@
               <tr>
                 <th class="p-3">ID / Waktu</th>
                 <th class="p-3">Pelanggan</th>
-                <th class="p-3">File</th>
-                <th class="p-3">Total & Metode</th>
-                <th class="p-3">Status Bayar</th>
+                <th class="p-3">File Dokumen</th>
+                <th class="p-3">Total Biaya</th>
+                <th class="p-3">Status Verifikasi</th>
                 <th class="p-3">Aksi Admin</th>
               </tr>
             </thead>
@@ -434,12 +455,10 @@
           </table>
         </div>
       </div>
-
     </div>
-
   </div>
 
-  <!-- MODAL INPUT TRANSAKSI MANUAL / OFFLINE -->
+  <!-- MODAL INPUT TRANSAKSI MANUAL -->
   <div id="manual-order-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
       <h3 class="font-bold text-lg text-slate-900">Input Transaksi Offline / Walk-in</h3>
@@ -535,17 +554,13 @@
   <script>
     lucide.createIcons();
 
-    // TARGET NO WA ADMIN
-    const TARGET_PHONE = '6285658323189'; 
-
-    // STATE DATABASE LOCAL STORAGE
     let orders = JSON.parse(localStorage.getItem('py_orders') || '[]');
     let expenses = JSON.parse(localStorage.getItem('py_expenses') || '[]');
     let adminPinStored = localStorage.getItem('py_admin_pin') || '1234';
     let currentAttachedFile = null;
+    let tempPendingOrder = null;
     let myChart = null;
 
-    // ELEMENTS
     const paperTypeEl = document.getElementById('paper-type');
     const printColorEl = document.getElementById('print-color');
     const printSidesEl = document.getElementById('print-sides');
@@ -571,13 +586,11 @@
     const fileNameEl = document.getElementById('file-name');
     const fileSizeEl = document.getElementById('file-size');
     const removeFileBtn = document.getElementById('remove-file');
-    const btnWhatsapp = document.getElementById('btn-whatsapp');
 
     function formatRupiah(amount) {
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
     }
 
-    // SWITCH TAB PORTAL / ADMIN
     function switchTab(type) {
       const clientView = document.getElementById('client-view');
       const adminView = document.getElementById('admin-view');
@@ -597,7 +610,6 @@
       }
     }
 
-    // FUNGSI KALKULATOR
     function calculateTotal() {
       const basePaperPrice = parseInt(paperTypeEl.value) || 0;
       const colorExtra = parseInt(printColorEl.value) || 0;
@@ -630,7 +642,6 @@
       el.addEventListener('input', calculateTotal);
     });
 
-    // UPLOAD FILE & BACA DOKUMEN PDF
     fileInput.addEventListener('change', async function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -655,7 +666,7 @@
             pageCountEl.value = pdf.numPages;
             calculateTotal();
           } catch (err) {
-            console.error("Gagal hitung PDF:", err);
+            console.error("Gagal membaca file PDF:", err);
           }
         }
       };
@@ -672,22 +683,26 @@
       calculateTotal();
     });
 
-    // KIRIM PESANAN (DIGITAL AUTO LUNAS / COD BELUM LUNAS)
-    btnWhatsapp.addEventListener('click', function() {
+    // PROSES ORDER DENGAN INTEGRASI LANGSUNG
+    function processOrder() {
       const custName = custNameEl.value.trim();
       const custPhone = custPhoneEl.value.trim();
 
       if (!custName || !custPhone) {
-        alert("Mohon lengkapi Nama Pemesan dan Nomor WhatsApp!");
+        alert("Mohon isi Nama Pemesan dan Nomor WhatsApp terlebih dahulu!");
+        return;
+      }
+
+      if (!currentAttachedFile) {
+        alert("Mohon unggah file/dokumen yang ingin dicetak!");
         return;
       }
 
       const calc = calculateTotal();
       const chosenPayment = paymentMethodEl.value;
-      const isAutoPayment = chosenPayment.includes('Auto');
 
-      const newOrder = {
-        id: 'PY-' + Math.floor(1000 + Math.random() * 9000),
+      const orderData = {
+        id: 'PY-' + Math.floor(100000 + Math.random() * 900000),
         date: new Date().toISOString(),
         custName: custName,
         custPhone: custPhone,
@@ -696,39 +711,85 @@
         bindingName: bindingTypeEl.options[bindingTypeEl.selectedIndex].text,
         deliveryName: deliveryOptionEl.options[deliveryOptionEl.selectedIndex].text,
         paymentMethod: chosenPayment,
-        pages: pageCountEl.value,
-        copies: copyCountEl.value,
-        totalSheets: calc.totalSheets,
         totalPrice: calc.grandTotal,
-        paymentStatus: isAutoPayment ? 'LUNAS' : 'Belum Lunas',
+        paymentStatus: 'Belum Lunas',
         file: currentAttachedFile
       };
 
-      orders.unshift(newOrder);
-      localStorage.setItem('py_orders', JSON.stringify(orders));
+      if (chosenPayment.includes('Direct') || chosenPayment.includes('QRIS')) {
+        // Tampilkan Modal Pembayaran QRIS / Direct
+        tempPendingOrder = orderData;
+        document.getElementById('pay-modal-amount').textContent = formatRupiah(calc.grandTotal);
+        
+        if (chosenPayment.includes('BCA')) {
+          document.getElementById('pay-modal-details').innerHTML = `
+            <div class="space-y-1 py-1">
+              <p class="text-slate-500">Bank Tujuan:</p>
+              <p class="font-bold text-slate-900">Bank BCA</p>
+              <p class="text-slate-500 mt-2">Nomor Rekening:</p>
+              <p class="font-extrabold text-brand-600 text-sm tracking-wider">1234 5678 90</p>
+              <p class="text-slate-500">Atas Nama: <strong class="text-slate-800">PrintYuk Tanjungpinang</strong></p>
+            </div>`;
+        } else if (chosenPayment.includes('Mandiri')) {
+          document.getElementById('pay-modal-details').innerHTML = `
+            <div class="space-y-1 py-1">
+              <p class="text-slate-500">Bank Tujuan:</p>
+              <p class="font-bold text-slate-900">Bank Mandiri</p>
+              <p class="text-slate-500 mt-2">Nomor Rekening:</p>
+              <p class="font-extrabold text-brand-600 text-sm tracking-wider">0987 6543 21</p>
+              <p class="text-slate-500">Atas Nama: <strong class="text-slate-800">PrintYuk Tanjungpinang</strong></p>
+            </div>`;
+        } else {
+          document.getElementById('pay-modal-details').innerHTML = `
+            <div class="text-center py-2 space-y-2">
+              <div class="bg-white p-3 inline-block rounded-xl border border-slate-300 shadow-inner">
+                <i data-lucide="qr-code" class="w-32 h-32 mx-auto text-slate-800"></i>
+              </div>
+              <p class="font-bold text-slate-900">QRIS PrintYuk Tanjungpinang</p>
+              <p class="text-[10px] text-slate-500">Scan via GoPay, ShopeePay, OVO, Dana, LinkAja, atau m-Banking</p>
+            </div>`;
+        }
+        
+        lucide.createIcons();
+        document.getElementById('payment-modal').classList.remove('hidden');
+      } else {
+        // OPSI COD / CASH DI TOKO
+        orderData.paymentStatus = 'Belum Lunas (COD/Cash)';
+        orders.unshift(orderData);
+        localStorage.setItem('py_orders', JSON.stringify(orders));
+        alert(`Pesanan COD berhasil dibuat! Silakan lakukan pembayaran tunai saat berkas diantar atau diambil.`);
+        resetOrderForm();
+      }
+    }
 
-      const fileName = currentAttachedFile ? currentAttachedFile.name : 'Tidak ada file';
-      const statusText = isAutoPayment ? '*SUDAH LUNAS (Digital Payment)*' : '*BELUM LUNAS (COD / Tunai)*';
+    function closePaymentModal() {
+      document.getElementById('payment-modal').classList.add('hidden');
+      tempPendingOrder = null;
+    }
 
-      const message = `*HALO ADMIN PRINTYUK! TANJUNGPINANG* 🖨️\n\n` +
-        `Saya mau pesan cetak dokumen:\n\n` +
-        `🆔 *ID Pesanan:* ${newOrder.id}\n` +
-        `👤 *Pemesan:* ${custName} (${custPhone})\n` +
-        `📄 *File:* ${fileName}\n` +
-        `📝 *Kertas:* ${newOrder.paperName}\n` +
-        `🎨 *Warna:* ${newOrder.colorName}\n` +
-        `📕 *Jilid:* ${newOrder.bindingName}\n` +
-        `📖 *Halaman & Copy:* ${newOrder.pages} Hal x ${newOrder.copies} Copy (${newOrder.totalSheets} lembar)\n` +
-        `🛵 *Pengiriman:* ${newOrder.deliveryName}\n` +
-        `💳 *Metode Bayar:* ${newOrder.paymentMethod}\n` +
-        `📌 *Status Pembayaran:* ${statusText}\n\n` +
-        `💰 *TOTAL BIAYA:* *${formatRupiah(calc.grandTotal)}*\n\n` +
-        `Mohon diproses ya admin, terima kasih!`;
+    function confirmPaymentDirect() {
+      if (tempPendingOrder) {
+        tempPendingOrder.paymentStatus = 'Menunggu Konfirmasi Lunas';
+        orders.unshift(tempPendingOrder);
+        localStorage.setItem('py_orders', JSON.stringify(orders));
+        alert("Terima kasih! Pesanan & konfirmasi pembayaran Anda telah masuk ke sistem Admin. Berkas akan diproses begitu Admin memverifikasi dana Anda.");
+        closePaymentModal();
+        resetOrderForm();
+      }
+    }
 
-      window.open(`https://wa.me/${TARGET_PHONE}?text=${encodeURIComponent(message)}`, '_blank');
-    });
+    function resetOrderForm() {
+      custNameEl.value = '';
+      custPhoneEl.value = '';
+      notesEl.value = '';
+      fileInput.value = '';
+      currentAttachedFile = null;
+      uploadPlaceholder.classList.remove('hidden');
+      fileInfo.classList.add('hidden');
+      pageCountEl.value = 1;
+      calculateTotal();
+    }
 
-    // UNLOCK ADMIN
     function unlockAdmin() {
       const pin = document.getElementById('admin-pin').value;
       if (pin === adminPinStored) {
@@ -740,18 +801,16 @@
       }
     }
 
-    // KONFIRMASI PEMBAYARAN MANUAL DI ADMIN (UNTUK COD/CASH)
     function markAsPaid(orderId) {
       const order = orders.find(o => o.id === orderId);
       if (order) {
         order.paymentStatus = 'LUNAS';
         localStorage.setItem('py_orders', JSON.stringify(orders));
         renderAdminDashboard();
-        alert(`Pesanan ${orderId} berhasil dikonfirmasi LUNAS!`);
+        alert(`Pesanan ${orderId} telah dikonfirmasi LUNAS!`);
       }
     }
 
-    // HELPER FILTER WAKTU
     function isDateInFilter(dateString, filterType) {
       const itemDate = new Date(dateString);
       const now = new Date();
@@ -767,18 +826,15 @@
       } else if (filterType === 'year') {
         return itemDate.getFullYear() === now.getFullYear();
       }
-      return true; // all
+      return true;
     }
 
-    // RENDER DASHBOARD ADMIN
     function renderAdminDashboard() {
       const filterType = document.getElementById('time-filter').value;
 
-      // Filter Data Orders & Expenses
       const filteredOrders = orders.filter(o => isDateInFilter(o.date, filterType));
       const filteredExpenses = expenses.filter(e => isDateInFilter(e.date, filterType));
 
-      // Hitung Pemasukan hanya dari yang LUNAS di periode tersebut
       const paidOrders = filteredOrders.filter(o => o.paymentStatus === 'LUNAS');
       const totalIncome = paidOrders.reduce((sum, o) => sum + o.totalPrice, 0);
       const totalExpense = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -788,7 +844,6 @@
       document.getElementById('stat-expense').textContent = formatRupiah(totalExpense);
       document.getElementById('stat-profit').textContent = formatRupiah(profit);
 
-      // Tabel Orders
       const orderTbody = document.getElementById('order-table-body');
       orderTbody.innerHTML = '';
 
@@ -799,19 +854,20 @@
           let downloadBtn = `<span class="text-slate-400">Tanpa File</span>`;
           if (o.file && o.file.dataUri) {
             downloadBtn = `<a href="${o.file.dataUri}" download="${o.file.name}" class="bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 px-2 py-1 rounded-lg font-bold inline-flex items-center gap-1">
-              <i data-lucide="download" class="w-3 h-3"></i> Download
+              <i data-lucide="download" class="w-3 h-3"></i> Download File
             </a>`;
           }
 
-          let statusBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">Belum Lunas</span>`;
-          let actionBtn = `<button type="button" onclick="markAsPaid('${o.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg font-bold text-xs shadow-sm">
-            Konfirmasi Lunas (COD)
-          </button>`;
+          let isPaid = o.paymentStatus === 'LUNAS';
+          let statusBadge = isPaid 
+            ? `<span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold">LUNAS</span>` 
+            : `<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">${o.paymentStatus}</span>`;
 
-          if (o.paymentStatus === 'LUNAS') {
-            statusBadge = `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">LUNAS</span>`;
-            actionBtn = `<span class="text-emerald-600 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Sedang Diproses</span>`;
-          }
+          let actionBtn = isPaid
+            ? `<span class="text-emerald-600 font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-4 h-4"></i> Siap Cetak</span>`
+            : `<button type="button" onclick="markAsPaid('${o.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg font-bold text-xs shadow-sm">
+                Konfirmasi Lunas
+              </button>`;
 
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -826,7 +882,6 @@
         });
       }
 
-      // Tabel Pengeluaran
       const expTbody = document.getElementById('expense-table-body');
       expTbody.innerHTML = '';
       expenses.forEach(e => {
@@ -844,7 +899,6 @@
       lucide.createIcons();
     }
 
-    // GRAFIK REAL BERDASARKAN FILTER WAKTU
     function renderRealChart(filterType) {
       const ctx = document.getElementById('financialChart').getContext('2d');
       if (myChart) myChart.destroy();
@@ -888,7 +942,6 @@
       });
     }
 
-    // MODAL INPUT TRANSAKSI OFFLINE / MANUAL
     function openManualOrderModal() { document.getElementById('manual-order-modal').classList.remove('hidden'); }
     function closeManualOrderModal() { document.getElementById('manual-order-modal').classList.add('hidden'); }
 
@@ -899,7 +952,7 @@
       const paymentMethod = document.getElementById('manual-payment-method').value;
 
       if (amount <= 0) {
-        alert("Mohon masukkan nominal pemasukan yang valid!");
+        alert("Masukkan nominal pemasukan yang valid!");
         return;
       }
 
@@ -928,7 +981,6 @@
       alert("Pemasukan manual berhasil ditambahkan!");
     }
 
-    // MODAL PENGATURAN GANTI PIN
     function openSettingsModal() { document.getElementById('settings-modal').classList.remove('hidden'); }
     function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
 
@@ -951,7 +1003,6 @@
       closeSettingsModal();
     }
 
-    // MODAL CATAT PENGELUARAN
     function openExpenseModal() { document.getElementById('expense-modal').classList.remove('hidden'); }
     function closeExpenseModal() { document.getElementById('expense-modal').classList.add('hidden'); }
 
